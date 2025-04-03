@@ -64,7 +64,7 @@ export default function Home() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 出題方法切り替え */}
           <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-gray-700">
+            <label className="relative flex items-center gap-2 text-gray-700 group cursor-pointer">
               <input
                 type="radio"
                 value="count"
@@ -73,8 +73,12 @@ export default function Home() {
                 disabled={loading || result?.length > 0}
               />
               問題数を指定（おまかせ）
+              <div className="absolute bottom-full mb-1 left-0 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10">
+                選択したレベルに応じた問題を自動生成
+              </div>
             </label>
-            <label className="flex items-center gap-2 text-gray-700">
+
+            <label className="relative flex items-center gap-2 text-gray-700 group cursor-pointer">
               <input
                 type="radio"
                 value="word"
@@ -83,6 +87,9 @@ export default function Home() {
                 disabled={loading || result?.length > 0}
               />
               単語を指定して出題
+              <div className="absolute bottom-full mb-1 left-0 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10">
+                指定単語が答となる問題を作成、問題文は選択したレベルに応じて自動生成
+              </div>
             </label>
           </div>
 
