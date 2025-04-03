@@ -1,3 +1,10 @@
+declare global {
+  interface Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
+}
+
 declare interface SpeechRecognition extends EventTarget {
   lang: string;
   continuous: boolean;

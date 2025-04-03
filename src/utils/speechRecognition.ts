@@ -1,8 +1,9 @@
 export const startSpeechRecognition = (onResult: (text: string) => void) => {
   // 柔軟に拡張（anyはここだけ！）
   const SpeechRecognition =
-    (window as any).SpeechRecognition ||
-    (window as any).webkitSpeechRecognition;
+    typeof window !== "undefined"
+      ? window.SpeechRecognition || window.webkitSpeechRecognition
+      : null;
 
   if (!SpeechRecognition) {
     alert("このブラウザは音声認識に対応していません。");
@@ -19,7 +20,7 @@ export const startSpeechRecognition = (onResult: (text: string) => void) => {
     onResult(transcript);
   };
 
-  recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+  recognition.onerror = () => {
     alert("音声認識中にエラーが発生しました");
   };
 

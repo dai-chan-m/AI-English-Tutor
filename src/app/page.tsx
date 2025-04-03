@@ -22,14 +22,14 @@ export default function Home() {
           className="bg-white border border-blue-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
           onClick={() => router.push("/vocab")}
         >
-          <h2 className="text-2xl font-semibold text-blue-600 mb-2">
+          <h2 className="text-2xl font-semibold text-blue-600 mb-4">
             📘 Vocab Drill
           </h2>
-          <p className="text-gray-700 text-sm">
-            英検やTOEICのレベルを選び、AIが英単語穴埋め問題を自動生成します。
-            <br />
-            印刷対応で、授業や自習にも最適！
-          </p>
+          <ul className="list-inside list-none space-y-1 text-sm text-gray-700 text-left">
+            <li>✅ 英検・TOEIC レベルを選んで練習</li>
+            <li>✅ 穴埋め形式の小テストをAIが自動生成</li>
+            <li>✅ 印刷にも対応、授業や自習にも便利</li>
+          </ul>
         </div>
 
         {/* Writing モード */}
@@ -37,14 +37,14 @@ export default function Home() {
           className="bg-white border border-green-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
           onClick={() => router.push("/writing")}
         >
-          <h2 className="text-2xl font-semibold text-green-600 mb-2">
+          <h2 className="text-2xl font-semibold text-green-600 mb-4">
             ✏️ AI Essay Clinic
           </h2>
-          <p className="text-gray-700 text-sm">
-            自分の英作文を入力すると、AIが文法チェック＆日本語で丁寧にフィードバック！
-            <br />
-            音声入力やOCR対応も試験運用中🎤📷
-          </p>
+          <ul className="list-inside list-none space-y-1 text-sm text-gray-700 text-left">
+            <li>✅ 英作文をAIが自動添削＆フィードバック</li>
+            <li>✅ 日本語で丁寧な解説付き</li>
+            <li>✅ 音声入力やOCRも試験運用中 🎤📷</li>
+          </ul>
         </div>
       </div>
 

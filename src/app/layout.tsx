@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Vocab Drill 自動英単語テストメーカー",
+  title: "AI English Tutor - AIがあなたの英語コーチに！",
   description:
     "AI Vocab Drill is a web application that generates English vocabulary tests using AI.",
   keywords: [
@@ -31,12 +31,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI VocabDrill - 英単語から英語小テストを自動作成！",
     description:
-      "レベル選択・出題数を指定して、穴埋め形式の選択式問題を一発生成。印刷もできる！",
+      "AIが英作文を添削、フィードバックします。英検やTOEICのレベルに合わせて小テストを自動生成！",
     url: "https://ai-vocab-drill.vercel.app",
     siteName: "AI VocabDrill",
     images: [
       {
-        url: "/og-image.png", // 公開時に表示させたいOGP画像
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "AI VocabDrill OGP",
@@ -46,8 +46,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI VocabDrill",
-    description: "AIが英検やTOEICのレベルに合わせて小テストを自動生成！",
+    title: "AI English Tutor 英作文AI添削、英単語小テスト自動生成",
+    description:
+      "AIが英作文を添削、フィードバックします。英検やTOEICのレベルに合わせて小テストを自動生成！",
     images: ["/og-image.png"],
   },
 };
