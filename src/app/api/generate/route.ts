@@ -106,15 +106,19 @@ export async function POST(req: NextRequest) {
       const parsed = JSON.parse(result);
       return NextResponse.json({ questions: parsed });
     } catch (e) {
+      if (e instanceof SyntaxError) {
+        return NextResponse.json(
+          { error: "Invalid JSON from GPT", raw: result },
+          { status: 500 }
+        );
+      }
+    }
+  } catch (error) {
+    if (error instanceof Error) {
       return NextResponse.json(
-        { error: "Invalid JSON from GPT", raw: result },
+        { error: "Internal Server Error", message: error.message },
         { status: 500 }
       );
     }
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: "Internal Server Error", message: error.message || error },
-      { status: 500 }
-    );
   }
 }

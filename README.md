@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🧠 AI VocabDrill
 
-## Getting Started
+**AI VocabDrill** は、英検または TOEIC のレベルに応じた **選択式英語問題（穴埋め形式）** を自動生成し、印刷もできる学習支援アプリです。  
+GPT の力を活用し、出題レベル・文の長さ・問題数を指定するだけで、高品質な英語小テストを瞬時に作成できます。
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ 主な機能
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- ✅ **英検（EIKEN）または TOEIC** のレベルを選択可能
+- ✅ 出題数・文の長さを自由に指定（短め／普通／長め）
+- ✅ 選択肢付きの**穴埋め問題**を自動生成
+- ✅ GPT による**日本語解説・和訳つき**
+- ✅ ワンクリックで **印刷に最適化された表示に切り替え**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 デモ
 
-## Learn More
+👉 [アプリを試す]()
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ 使用技術
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js 14（App Router）
+- TypeScript
+- Tailwind CSS
+- OpenAI API（GPT-3.5 / GPT-4 対応）
+- Vercel（ホスティング）
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🧪 使い方
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. 英検 または TOEIC を選ぶ
+2. レベル（例：英検 3 級、TOEIC700）を指定
+3. 問題数と文の長さ（短め／普通／長め）を選ぶ
+4. 「問題を作成する」ボタンを押すと、問題が自動生成されます
+5. 結果を画面上で確認、または **印刷ボタンでプリントアウト可能！**
+
+---
+
+## 📝 注意事項
+
+- GPT による生成のため、稀に適切でない出題が含まれる可能性があります
+- API 使用には OpenAI の API キー（従量課金制）が必要です
+- GPT-4 を使用するとより精度が高い問題が得られます（課金必須）
+
+---
+
+## 🙌 作者
+
+- 開発：**[だいちゃん](https://github.com/dai-chan-m)**
+- 教育・学習に役立つ AI アプリを開発中
+- ご意見・改善要望など歓迎です！
+
+---
+
+## 📜 ライセンス
+
+MIT License
