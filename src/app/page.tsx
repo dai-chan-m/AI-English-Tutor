@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import QuestionViewer from "@/components/QuestionViewer";
+import { AnimatePresence, motion } from "framer-motion";
 
 type QuestionType = {
   questionCount: string;
@@ -13,9 +14,11 @@ type QuestionType = {
 };
 
 export default function Home() {
+  const [mode, setMode] = useState<"count" | "word">("count");
+  const [words, setWords] = useState("");
   const [questionCount, setQuestionCount] = useState("");
   const [testType, setTestType] = useState<"eiken" | "toeic">("eiken");
-  const [level, setLevel] = useState("");
+  const [level, setLevel] = useState("CEFR preA1");
   const [length, setLength] = useState("11 to 15 words");
   const [result, setResult] = useState<QuestionType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -24,6 +27,7 @@ export default function Home() {
     e.preventDefault();
     if (result?.length > 0) {
       window.location.reload();
+      return;
     }
     setLoading(true);
 
@@ -31,6 +35,11 @@ export default function Home() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        mode,
+        words: words
+          .split(",")
+          .map((w) => w.trim())
+          .filter((w) => w.length > 0),
         questionCount,
         level,
         length,
@@ -38,8 +47,7 @@ export default function Home() {
     });
 
     const data = await res.json();
-
-    setResult(data.questions); // ← GPTのJSON出力をセット
+    setResult(data.questions);
     setLoading(false);
   };
 
@@ -50,26 +58,83 @@ export default function Home() {
           AI VocabDrill
         </h1>
         <p className="text-center text-gray-600">
-          レベルを選択すると、AIが英語の穴埋め問題を作成します。
+          出題方法を選び、英語の穴埋め問題をAIに作らせよう！
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 出題数 */}
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            出題数（1〜10問）
-          </label>
-          <select
-            value={questionCount}
-            onChange={(e) => setQuestionCount(e.target.value)}
-            className="w-full border border-gray-300 text-gray-700 rounded-md px-4 py-2"
-            disabled={loading || result?.length > 0}
-          >
-            {[1, 2, 3, 5, 10].map((n) => (
-              <option key={n} value={n}>
-                {n}問
-              </option>
-            ))}
-          </select>
+          {/* 出題方法切り替え */}
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-gray-700">
+              <input
+                type="radio"
+                value="count"
+                checked={mode === "count"}
+                onChange={() => setMode("count")}
+                disabled={loading || result?.length > 0}
+              />
+              問題数を指定（おまかせ）
+            </label>
+            <label className="flex items-center gap-2 text-gray-700">
+              <input
+                type="radio"
+                value="word"
+                checked={mode === "word"}
+                onChange={() => setMode("word")}
+                disabled={loading || result?.length > 0}
+              />
+              単語を指定して出題
+            </label>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {mode === "count" && (
+              <motion.div
+                key="count"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  出題数（1〜10問）
+                </label>
+                <select
+                  value={questionCount}
+                  onChange={(e) => setQuestionCount(e.target.value)}
+                  className="w-full border border-gray-300 text-gray-700 rounded-md px-4 py-2"
+                  disabled={loading || result?.length > 0}
+                >
+                  {[5, 10, 15].map((n) => (
+                    <option key={n} value={n}>
+                      {n}問
+                    </option>
+                  ))}
+                </select>
+              </motion.div>
+            )}
+
+            {mode === "word" && (
+              <motion.div
+                key="word"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  英単語（カンマ区切り 最大10個）
+                </label>
+                <input
+                  type="text"
+                  value={words}
+                  onChange={(e) => setWords(e.target.value)}
+                  placeholder="例: improve, goal, success"
+                  className="w-full border border-gray-300 text-gray-800 rounded-md px-4 py-2"
+                  disabled={loading || result?.length > 0}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 試験種別 */}
           <div>

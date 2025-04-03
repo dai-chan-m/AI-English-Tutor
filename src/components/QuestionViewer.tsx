@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-// 型定義
 export type QuestionType = {
   questionCount: string;
   question: string;
@@ -12,7 +11,6 @@ export type QuestionType = {
   Japanese: string;
 };
 
-// シャッフル関数
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -22,14 +20,14 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
-// 問題表示コンポーネント
 function QuestionViewer({ questions }: { questions: QuestionType[] }) {
   const [shuffledQuestions, setShuffledQuestions] = useState<QuestionType[]>(
     []
   );
   const [answers, setAnswers] = useState<(string | null)[]>([]);
+  const [title, setTitle] = useState("");
+  const [showNameField, setShowNameField] = useState(true);
 
-  // 初回のみシャッフルされたquestionsを保存
   useEffect(() => {
     const withShuffledChoices = questions.map((q) => ({
       ...q,
@@ -47,6 +45,43 @@ function QuestionViewer({ questions }: { questions: QuestionType[] }) {
 
   return (
     <div className="mt-8 w-full max-w-4xl mx-auto bg-white p-6 print:shadow-none print:bg-white print:p-0 print:rounded-none">
+      {/* プリントタイトルと記名欄の入力（印刷前のみ） */}
+      <div className="print:hidden space-y-4 mb-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            プリントタイトル（任意）
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="例: 英検準2級 語彙テスト"
+            className="w-full border px-4 py-2 rounded text-gray-700 "
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="nameBox"
+            checked={showNameField}
+            onChange={() => setShowNameField(!showNameField)}
+          />
+          <label htmlFor="nameBox" className="text-sm text-gray-700">
+            印刷時に記名欄を表示する（名前：＿＿＿＿＿＿＿＿＿）
+          </label>
+        </div>
+      </div>
+
+      {/* 印刷ヘッダー（タイトルや記名欄） */}
+      <div className="mb-6 hidden print:block text-center pb-4">
+        {title && <h2 className="text-xl font-bold mb-2">{title}</h2>}
+        {showNameField && (
+          <div className="text-right text-gray-800 print:text-black mt-4 me-4">
+            名前：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+          </div>
+        )}
+      </div>
+
       <div className="space-y-6 text-gray-900 text-lg whitespace-pre-wrap leading-relaxed">
         <div className="">
           {shuffledQuestions.map((q, index) => {
@@ -54,10 +89,7 @@ function QuestionViewer({ questions }: { questions: QuestionType[] }) {
             const isCorrect = selected === q.answer;
 
             return (
-              <div
-                key={index}
-                className="bg-white p-4 print:shadow-none print:break-inside-avoid"
-              >
+              <div key={index} className="bg-white p-4 print:shadow-none">
                 <p className="font-semibold text-lg mb-2">
                   {index + 1}. {q.question}
                 </p>
@@ -92,7 +124,6 @@ function QuestionViewer({ questions }: { questions: QuestionType[] }) {
                   })}
                 </div>
 
-                {/* 正誤表示（印刷時は非表示） */}
                 {selected && (
                   <div className="mt-3 font-medium print:hidden space-y-1">
                     <p>
@@ -118,7 +149,6 @@ function QuestionViewer({ questions }: { questions: QuestionType[] }) {
             );
           })}
 
-          {/* 印刷ボタン */}
           <div className="text-center mt-10 print:hidden">
             <button
               onClick={() => window.print()}
