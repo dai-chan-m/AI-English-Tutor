@@ -42,6 +42,17 @@ export async function POST(req: NextRequest) {
 [${toneInstruction}]
 ---
 
+最後に、以下の観点で英作文全体の総合評価コメントを追加してください：
+- 構成やまとまり（Introduction, Body, Conclusionなど）
+- 論理的な流れやつながり
+- 語彙や表現の幅、適切さ
+- 読み手への伝わりやすさ
+
+以下のように出力してください：
+
+📝 全体講評:
+[中学生にもわかる日本語でコメントを記載]
+
 【英作文】  
 ${text}
 
