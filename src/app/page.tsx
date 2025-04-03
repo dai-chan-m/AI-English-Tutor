@@ -55,11 +55,11 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10 print:bg-white print:shadow-none print:border-none print:rounded-none">
       <div className="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl p-8 space-y-8 print:hidden print:shadow-none">
         <h1 className="text-4xl font-bold text-center text-blue-600">
-          AI VocabDrill
+          AI Vocab Drill
         </h1>
-        <p className="text-center text-gray-600">
-          出題方法を選び、英語の穴埋め問題をAIに作らせよう！
-        </p>
+        <h3 className="text-xl text-center text-gray-600">
+          AI英単語テストメーカー
+        </h3>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 出題方法切り替え */}
@@ -166,13 +166,17 @@ export default function Home() {
                   name="testType"
                   value="toeic"
                   checked={testType === "toeic"}
-                  onChange={() => setTestType("toeic")}
+                  onChange={() => {
+                    setTestType("toeic");
+                    setLevel("TOEIC400 CEFR A2");
+                  }}
                   disabled={loading || result?.length > 0}
                 />
                 TOEIC
               </label>
             </div>
           </div>
+
           {/* レベル選択 */}
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -186,7 +190,6 @@ export default function Home() {
             >
               {testType === "eiken" && (
                 <>
-                  <option value="">選択してください</option>
                   <option value="CEFR preA1">英検5級</option>
                   <option value="CEFR A1">英検4級</option>
                   <option value="CEFR A1–A2">英検3級</option>
@@ -198,7 +201,6 @@ export default function Home() {
               )}
               {testType === "toeic" && (
                 <>
-                  <option value="">選択してください</option>
                   <option value="TOEIC400 CEFR A2">TOEIC 400</option>
                   <option value="TOEIC500 CEFR A2+">TOEIC 500</option>
                   <option value="TOEIC600 CEFR B1">TOEIC 600</option>
