@@ -5,6 +5,12 @@ import { writeFile } from "fs/promises";
 import path from "path";
 import { tmpdir } from "os";
 
+// 認証設定（jsonファイルのパスを指定）
+process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(
+  process.cwd(),
+  process.env.GOOGLE_APPLICATION_CREDENTIALS!
+);
+
 // Visionライブラリ読み込み
 import vision from "@google-cloud/vision";
 const client = new vision.ImageAnnotatorClient();
