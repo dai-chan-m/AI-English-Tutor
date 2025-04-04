@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 
 export function OCRDropZone({
@@ -9,11 +10,30 @@ export function OCRDropZone({
   setInputText: React.Dispatch<React.SetStateAction<string>>;
   isAuthenticated: boolean;
 }) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileUpload = async (file: File) => {
+    if (!file || !file.type.startsWith("image/")) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/ocr", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    const cleaned = cleanOcrText(data.text || "");
+    setInputText((prev) => prev + "\n" + cleaned);
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="border-2 border-dashed border-gray-400 bg-gray-100 text-gray-500 text-sm text-center px-4 py-6 rounded-md space-y-2">
         <p>
-          📷 ここに画像ファイルをドロップすると、英文を自動入力します
+          📷
+          ここに画像ファイルをドロップまたは選択すると、英文を自動入力します。
           <br />
           <br />
           🔒この機能を使うには{" "}
@@ -31,37 +51,42 @@ export function OCRDropZone({
             href="/signup"
             className="text-blue-600 hover:underline font-semibold"
           >
-            無料ユーザー登録する
+            無料ユーザー登録
           </Link>
+          をお願いします。
         </p>
       </div>
     );
   }
 
   return (
-    <div
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={async (e) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files?.[0];
-        if (!file || !file.type.startsWith("image/")) return;
+    <>
+      {/* ドラッグ＆ドロップ & タップアップロード 両対応 */}
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const file = e.dataTransfer.files?.[0];
+          if (file) handleFileUpload(file);
+        }}
+        onClick={() => fileInputRef.current?.click()}
+        className="border-2 border-dashed border-green-400 bg-green-50 text-green-800 text-sm text-center px-4 py-6 rounded-md mb-2 cursor-pointer hover:bg-green-100 transition"
+      >
+        📷 画像をこのエリアにドロップもしくはタップして選択
+      </div>
 
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch("/api/ocr", {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await res.json();
-        const cleaned = cleanOcrText(data.text || "");
-        setInputText((prev) => prev + "\n" + cleaned);
-      }}
-      className="border-2 border-dashed border-green-400 bg-green-50 text-green-800 text-sm text-center px-4 py-6 rounded-md mb-2"
-    >
-      📷 ここに画像ファイルをドロップすると、英文を自動入力します
-    </div>
+      {/* 非表示の input type="file" */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFileUpload(file);
+        }}
+        className="hidden"
+      />
+    </>
   );
 }
 
