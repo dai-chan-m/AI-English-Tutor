@@ -70,6 +70,8 @@ export default function WritingPractice() {
     };
 
     recognition.onend = () => {
+      recognitionRef.current?.stop();
+      recognitionRef.current?.abort();
       setIsRecording(false); // 自然停止時も
     };
 
