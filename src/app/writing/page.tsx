@@ -76,7 +76,7 @@ export default function WritingPractice() {
           {/* テキスト入力 */}
           <textarea
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(e) => setInputText(cleanOcrText(e.target.value))}
             rows={6}
             placeholder="ここに英文を入力してください"
             className="w-full border border-gray-300 rounded-md p-4 text-gray-800 focus:ring-2 focus:ring-green-400"
