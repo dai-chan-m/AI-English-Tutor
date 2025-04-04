@@ -67,6 +67,8 @@ export default function WritingPractice() {
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const spoken = event.results[0][0].transcript;
       setInputText((prev) => `${prev} ${normalizeSentence(spoken)}`);
+      recognitionRef.current?.stop();
+      recognitionRef.current?.abort();
     };
 
     recognition.onend = () => {
