@@ -3,15 +3,21 @@
 import { useState } from "react";
 import { startSpeechRecognition } from "@/utils/speechRecognition";
 import { OCRDropZone } from "@/components/OCRDropZone";
+import { WRITING_MODE } from "@/constants/app";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import Link from "next/link";
+import Footer from "@/components/Footer";
+import ServiceLogo from "@/components/ServiceLogo";
 
 export default function WritingPractice() {
-  const { isAuthenticated } = useAuthGuard(false); // リダイレクトしないようにfalseを渡す
+  const { isAuthenticated } = useAuthGuard(false);
   const [inputText, setInputText] = useState("");
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
   const [tone, setTone] = useState("gentle");
   const [tab, setTab] = useState<"summary" | "feedback">("feedback");
+  const MAX_LENGTH = isAuthenticated ? 1000 : 300;
+  const remaining = MAX_LENGTH - inputText.length;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,9 +57,10 @@ export default function WritingPractice() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-100 to-white px-4 py-10">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8 space-y-6">
+      <ServiceLogo />
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8 space-y-6 mt-10">
         <h1 className="text-4xl font-bold text-center text-green-700">
-          AI Essay Clinic 🩺
+          {WRITING_MODE}
         </h1>
         <h3 className="text-xl text-center text-gray-600">
           英文を入力すると、AIが添削・フィードバックしてくれます。
@@ -78,11 +85,32 @@ export default function WritingPractice() {
           {/* テキスト入力 */}
           <textarea
             value={inputText}
-            onChange={(e) => setInputText(cleanOcrText(e.target.value))}
+            onChange={(e) => {
+              const cleaned = cleanOcrText(e.target.value);
+              if (cleaned.length <= MAX_LENGTH) {
+                setInputText(cleaned);
+              }
+            }}
             rows={6}
-            placeholder="ここに英文を入力してください"
-            className="w-full border border-gray-300 rounded-md p-4 text-gray-800 focus:ring-2 focus:ring-green-400"
+            placeholder={`ここに英文を入力してください（最大${MAX_LENGTH}文字）`}
+            className="w-full border border-gray-300 rounded-md p-4 text-gray-800 focus:border-transparent"
           />
+          <div className="text-right text-sm text-gray-500 mb-1">
+            残り文字数: {remaining}
+          </div>
+          {!isAuthenticated && (
+            <div className="text-right text-sm text-gray-500 mt-1">
+              🔒
+              <Link
+                href="/login"
+                className="text-blue-600 hover:underline font-semibold"
+              >
+                ログイン
+              </Link>
+              すると最大
+              <span className="font-semibold">1000文字</span> まで入力できます。
+            </div>
+          )}
 
           {/* ドロップゾーン（ログインしてるかで切り替え） */}
           <OCRDropZone
@@ -99,7 +127,7 @@ export default function WritingPractice() {
                   setInputText((prev) => `${prev} ${normalizeSentence(spoken)}`)
                 )
               }
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-blue-600 hover:underline cursor-pointer"
             >
               🎤 スピーキングで入力する
             </button>
@@ -156,6 +184,8 @@ export default function WritingPractice() {
           </div>
         )}
       </div>
+      {/* フッター */}
+      <Footer />
     </div>
   );
 }

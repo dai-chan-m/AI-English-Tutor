@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabaseClient";
 import Link from "next/link";
+import Footer from "@/components/Footer";
+import ServiceLogo from "@/components/ServiceLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,6 +35,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50 px-4">
+      <ServiceLogo />
       <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md animate-fade-in">
         <h1 className="text-3xl font-bold text-center text-green-600 mb-4">
           ログイン
@@ -91,6 +94,7 @@ export default function LoginPage() {
             トップページに戻る
           </Link>
         </div>
+        <Footer />
       </div>
     </div>
   );

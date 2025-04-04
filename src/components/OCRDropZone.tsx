@@ -13,7 +13,17 @@ export function OCRDropZone({
     return (
       <div className="border-2 border-dashed border-gray-400 bg-gray-100 text-gray-500 text-sm text-center px-4 py-6 rounded-md space-y-2">
         <p>
-          🔒 OCR機能を使うには <strong>ログイン</strong> が必要です。
+          📷 ここに画像ファイルをドロップすると、英文を自動入力します
+          <br />
+          <br />
+          🔒この機能を使うには{" "}
+          <Link
+            href="/login"
+            className="text-blue-600 hover:underline font-semibold"
+          >
+            ログイン
+          </Link>
+          が必要です。
         </p>
         <p>
           アカウントをお持ちでない方は
@@ -50,7 +60,7 @@ export function OCRDropZone({
       }}
       className="border-2 border-dashed border-green-400 bg-green-50 text-green-800 text-sm text-center px-4 py-6 rounded-md mb-2"
     >
-      📷 ここに画像ファイルをドロップすると、英文を自動入力します（試験運用中）
+      📷 ここに画像ファイルをドロップすると、英文を自動入力します
     </div>
   );
 }

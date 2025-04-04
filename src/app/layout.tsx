@@ -61,10 +61,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SupabaseProvider>
-          {children}
-        </SupabaseProvider>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <SupabaseProvider>{children}</SupabaseProvider>
       </body>
     </html>
   );

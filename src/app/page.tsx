@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { APP_NAME, WRITING_MODE, VOCAB_MODE } from "@/constants/app";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   const router = useRouter();
@@ -8,7 +10,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-100 to-white flex flex-col items-center justify-center px-4 py-20">
       <h1 className="text-5xl font-extrabold text-blue-700 mb-6 text-center drop-shadow-sm">
-        AI English Tutor
+        {APP_NAME}
       </h1>
       <p className="text-gray-600 text-lg text-center max-w-xl mb-12">
         このアプリでは、AIを活用して英語学習をサポートします。
@@ -23,7 +25,7 @@ export default function Home() {
           onClick={() => router.push("/vocab")}
         >
           <h2 className="text-2xl font-semibold text-blue-600 mb-4">
-            📘 Vocab Drill
+            {VOCAB_MODE}
           </h2>
           <ul className="list-inside list-none space-y-1 text-sm text-gray-700 text-left">
             <li>✅ 英検・TOEIC レベルを選んで練習</li>
@@ -38,7 +40,7 @@ export default function Home() {
           onClick={() => router.push("/writing")}
         >
           <h2 className="text-2xl font-semibold text-green-600 mb-4">
-            ✏️ AI Essay Clinic
+            {WRITING_MODE}
           </h2>
           <ul className="list-inside list-none space-y-1 text-sm text-gray-700 text-left">
             <li>✅ 英作文をAIが自動添削＆フィードバック</li>
@@ -47,10 +49,7 @@ export default function Home() {
           </ul>
         </div>
       </div>
-
-      <footer className="mt-20 text-gray-400 text-sm text-center">
-        © {new Date().getFullYear()} AI English Tutor
-      </footer>
+      <Footer />
     </main>
   );
 }

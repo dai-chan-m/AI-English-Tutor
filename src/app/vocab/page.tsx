@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import QuestionViewer from "@/components/QuestionViewer";
-import { AnimatePresence, motion } from "framer-motion";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { VOCAB_MODE } from "@/constants/app";
+import Footer from "@/components/Footer";
+import ServiceLogo from "@/components/ServiceLogo";
+import Link from "next/link";
 
 type QuestionType = {
   questionCount: string;
@@ -18,12 +21,34 @@ export default function Home() {
   const { isAuthenticated } = useAuthGuard(false); // リダイレクトなし
   const [mode, setMode] = useState<"count" | "word">("count");
   const [words, setWords] = useState("");
+  const [wordError, setWordError] = useState("");
   const [questionCount, setQuestionCount] = useState("");
   const [testType, setTestType] = useState<"eiken" | "toeic">("eiken");
   const [level, setLevel] = useState("CEFR preA1");
   const [length, setLength] = useState("11 to 15 words");
   const [result, setResult] = useState<QuestionType[]>([]);
   const [loading, setLoading] = useState(false);
+  const invalidInput = mode === "word" && (!!wordError || !words.trim());
+
+  const validateWords = (input: string) => {
+    const trimmed = input.trim();
+    if (trimmed.length > 100) {
+      return "※100文字以内で入力してください。";
+    }
+    const parts = trimmed
+      .split(",")
+      .map((w) => w.trim())
+      .filter((w) => w !== "");
+    if (parts.length > 10) {
+      return "※単語は最大10個までです。";
+    }
+    for (const word of parts) {
+      if (!/^[a-zA-Z]+$/.test(word)) {
+        return "※半角英字のみ入力可能です（記号・日本語不可）。";
+      }
+    }
+    return "";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +81,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10 print:bg-white print:shadow-none print:border-none print:rounded-none">
-      <div className="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl p-8 space-y-8 print:hidden print:shadow-none">
+      <ServiceLogo />
+      <div className="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl p-8 space-y-8 print:hidden print:shadow-none mt-10">
         <h1 className="text-4xl font-bold text-center text-blue-600">
-          AI Vocab Drill🤖
+          {VOCAB_MODE}
         </h1>
         <h3 className="text-xl text-center text-gray-600">
           英単語の問題を自動生成します。
@@ -98,63 +124,70 @@ export default function Home() {
             </label>
           </div>
 
-          <AnimatePresence mode="wait">
-            {mode === "count" && (
-              <motion.div
-                key="count"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
+          {mode === "count" && (
+            <div key="count">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                出題数
+                {!isAuthenticated && (
+                  <div className="mt-2 text-xs text-gray-600 flex items-center">
+                    <span>
+                      🔒
+                      <Link
+                        href="/login"
+                        className="text-blue-600 hover:underline font-semibold"
+                      >
+                        ログイン
+                      </Link>
+                      すると最大15問まで出題できます。
+                    </span>
+                  </div>
+                )}
+              </label>
+              <select
+                value={questionCount}
+                onChange={(e) => setQuestionCount(e.target.value)}
+                className="w-full border border-gray-300 text-gray-700 rounded-md px-4 py-2"
+                disabled={loading || result?.length > 0}
               >
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  出題数　
-                  <span>
-                    ※ログインすると最大15問まで出題できます。
-                    <a>
-                      <span className="text-blue-600 hover:underline cursor-pointer">
-                        ログインする
-                      </span>
-                    </a>
-                  </span>
-                </label>
-                <select
-                  value={questionCount}
-                  onChange={(e) => setQuestionCount(e.target.value)}
-                  className="w-full border border-gray-300 text-gray-700 rounded-md px-4 py-2"
-                  disabled={loading || result?.length > 0}
-                >
-                  {makeableNumbers.map((n) => (
-                    <option key={n} value={n}>
-                      {n}問
-                    </option>
-                  ))}
-                </select>
-              </motion.div>
-            )}
+                {makeableNumbers.map((n) => (
+                  <option key={n} value={n}>
+                    {n}問
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-            {mode === "word" && (
-              <motion.div
-                key="word"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  英単語（カンマ区切り 最大10個）
-                </label>
-                <input
-                  type="text"
-                  value={words}
-                  onChange={(e) => setWords(e.target.value)}
-                  placeholder="例: improve, goal, success"
-                  className="w-full border border-gray-300 text-gray-800 rounded-md px-4 py-2"
-                  disabled={loading || result?.length > 0}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {mode === "word" && (
+            <div key="word">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <p className="text-sm text-gray-500 mt-1">
+                  ※英単語（英字のみ）を最大10個まで、カンマ区切りで入力してください（例:
+                  improve, goal）
+                </p>
+              </label>
+              <input
+                type="text"
+                value={words}
+                onChange={(e) => {
+                  const input = e.target.value;
+                  setWords(input);
+                  const error = validateWords(input);
+                  setWordError(error);
+                }}
+                placeholder="例: improve, goal, success"
+                className={`w-full border rounded-md px-4 py-2 text-gray-800 ${
+                  wordError
+                    ? "border-red-500 focus:ring-red-300"
+                    : "border-gray-300 focus:ring-blue-400"
+                }`}
+                disabled={loading || result?.length > 0}
+              />
+              {wordError && (
+                <p className="text-sm text-red-600 mt-1">{wordError}</p>
+              )}
+            </div>
+          )}
 
           {/* 試験種別 */}
           <div>
@@ -246,6 +279,7 @@ export default function Home() {
           <div className="text-center pt-4">
             <button
               type="submit"
+              disabled={loading || invalidInput}
               className={`font-semibold px-6 py-2 rounded-lg transition
                 ${
                   loading
@@ -253,9 +287,9 @@ export default function Home() {
                     : result?.length === 0
                     ? "bg-blue-600 hover:bg-blue-700 text-white"
                     : "bg-yellow-400 hover:bg-yellow-500 text-gray-800"
-                }
+                } 
+                ${invalidInput ? "opacity-50 cursor-not-allowed" : ""}
               `}
-              disabled={loading}
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2 text-blue-600">
@@ -291,6 +325,7 @@ export default function Home() {
         </form>
       </div>
       {result && result.length > 0 && <QuestionViewer questions={result} />}
+      <Footer />
     </div>
   );
 }
