@@ -1,19 +1,24 @@
-// src/app/api/ocr/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile } from "fs/promises";
 import path from "path";
 import { tmpdir } from "os";
 
-// 認証設定（jsonファイルのパスを指定）
-process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(
-  process.cwd(),
-  process.env.GOOGLE_APPLICATION_CREDENTIALS!
-);
-
 // Visionライブラリ読み込み
 import vision from "@google-cloud/vision";
-const client = new vision.ImageAnnotatorClient();
+
+// 環境変数からGoogle認証情報を取得して設定
+let credentials;
+if (process.env.GOOGLE_CREDENTIALS) {
+  try {
+    credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+  } catch (error) {
+    console.error("Failed to parse GOOGLE_CREDENTIALS:", error);
+  }
+}
+
+const client = new vision.ImageAnnotatorClient({
+  credentials: credentials,
+});
 
 export async function POST(req: NextRequest) {
   try {
