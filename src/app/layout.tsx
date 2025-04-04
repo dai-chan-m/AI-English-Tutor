@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SupabaseProvider from "@/components/SupabaseProvider";
+import { APP_NAME } from "@/constants/app";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,27 +31,27 @@ export const metadata: Metadata = {
     "英語学習",
   ],
   openGraph: {
-    title: "AI VocabDrill - 英単語から英語小テストを自動作成！",
+    title: APP_NAME + " - 英単語から英語小テストを自動作成！",
     description:
       "AIが英作文を添削、フィードバックします。英検やTOEICのレベルに合わせて小テストを自動生成！",
-    url: "https://ai-vocab-drill.vercel.app",
-    siteName: "AI VocabDrill",
+    url: "https://ai-english-tutor-gamma.vercel.app",
+    siteName: "AI English Tutor",
     images: [
       {
-        url: "/og-image.png",
+        url: "/ogp.png", // 👈 public/ogp.png にある画像が読み込まれる
         width: 1200,
         height: 630,
-        alt: "AI VocabDrill OGP",
+        alt: APP_NAME + " OGP",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI English Tutor 英作文AI添削、英単語小テスト自動生成",
+    title: APP_NAME + "英作文AI添削、英単語小テスト自動生成",
     description:
       "AIが英作文を添削、フィードバックします。英検やTOEICのレベルに合わせて小テストを自動生成！",
-    images: ["/og-image.png"],
+    images: ["/ogp.png"],
   },
 };
 

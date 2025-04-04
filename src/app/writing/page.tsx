@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { startSpeechRecognition } from "@/utils/speechRecognition";
 import { OCRDropZone } from "@/components/OCRDropZone";
 import { WRITING_MODE } from "@/constants/app";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
@@ -60,24 +59,18 @@ export default function WritingPractice() {
   /* 音声認識関連 */
   const handleStart = () => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
     recognition.continuous = false;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const spoken = event.results[0][0].transcript;
       setInputText((prev) => `${prev} ${normalizeSentence(spoken)}`);
     };
 
     recognition.onend = () => {
       setIsRecording(false); // 自然停止時も
-    };
-
-    recognition.onerror = (e: any) => {
-      console.error("Speech recognition error", e);
-      setIsRecording(false);
     };
 
     recognitionRef.current = recognition;
