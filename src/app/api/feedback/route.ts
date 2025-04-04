@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
         "中学生にもわかるように、やさしく丁寧に説明してください。";
       break;
     case "strict":
-      toneInstruction = "正確さを重視し、論理的かつ簡潔に指摘してください。";
+      toneInstruction =
+        "あなたは高校の英語教師です。正確さを重視し、論理的かつ簡潔に指摘してください。";
       break;
     case "friendly":
       toneInstruction =
@@ -29,7 +30,6 @@ export async function POST(req: NextRequest) {
   }
 
   const prompt = `
-あなたは日本人中学生向けの英語教師です。
 
 以下の英作文について、文を一文ずつ取り出し、次の形式で添削・フィードバックしてください。
 
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 以下のように出力してください：
 
 📝 全体講評:
-[中学生にもわかる日本語でコメントを記載]
+[日本語でコメントを記載]
 
 【英作文】  
 ${text}

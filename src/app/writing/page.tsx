@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { startSpeechRecognition } from "@/utils/speechRecognition";
-import Tesseract from "tesseract.js";
+import { OCRDropZone } from "@/components/OCRDropZone";
 
 export default function WritingPractice() {
   const [inputText, setInputText] = useState("");
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
-  const [fileLoading, setFileLoading] = useState(false);
   const [tone, setTone] = useState("gentle");
   const [tab, setTab] = useState<"summary" | "feedback">("feedback");
 
@@ -68,10 +67,10 @@ export default function WritingPractice() {
             onChange={(e) => setTone(e.target.value)}
             className="w-full border border-gray-300 rounded-md px-4 py-2 text-gray-800"
           >
-            <option value="gentle">🧑‍🏫 優しい先生</option>
-            <option value="strict">👩‍🏫 厳しめの先生</option>
+            <option value="gentle">🧑‍🏫 優しい中学校の先生</option>
+            <option value="strict">👩‍🏫 厳しめの高校の先生</option>
             <option value="friendly">🧑‍🤝‍🧑 めっちゃポジティブな先輩</option>
-            <option value="business">🧑‍💼 ビジネス添削</option>
+            <option value="business">🧑‍💼 論理的なビジネス英語教師</option>
           </select>
 
           {/* テキスト入力 */}
@@ -83,27 +82,8 @@ export default function WritingPractice() {
             className="w-full border border-gray-300 rounded-md p-4 text-gray-800 focus:ring-2 focus:ring-green-400"
           />
 
-          {/* ドロップゾーン */}
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={async (e) => {
-              e.preventDefault();
-              const file = e.dataTransfer.files?.[0];
-              if (file && file.type.startsWith("image/")) {
-                setFileLoading(true);
-                const { data } = await Tesseract.recognize(file, "eng");
-                const rawText = data.text;
-                const cleaned = cleanOcrText(rawText);
-                setInputText((prev) => prev + "\n" + cleaned);
-                setFileLoading(false);
-              }
-            }}
-            className="border-2 border-dashed border-green-400 bg-green-50 text-green-800 text-sm text-center px-4 py-6 rounded-md mb-2"
-          >
-            {fileLoading
-              ? "🖼️ 画像を処理中..."
-              : "📷 ここに画像ファイルをドロップすると、英文を自動入力します（試験運用中、キレイな手書きしか読めません）"}
-          </div>
+          {/* ドロップゾーン（ログインしてるかで切り替え） */}
+          <OCRDropZone setInputText={setInputText} />
 
           {/* 音声入力 */}
           <div className="text-right">
