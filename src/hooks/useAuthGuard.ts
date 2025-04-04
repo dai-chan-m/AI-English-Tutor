@@ -8,7 +8,7 @@ import { supabaseBrowser } from "@/utils/supabaseClient";
 export const useAuthGuard = (redirectOnFailure = true) => {
   const router = useRouter();
   const pathname = usePathname();
-  const [loading, setLoading] = useState(true);
+  const [checkingAuth, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export const useAuthGuard = (redirectOnFailure = true) => {
       setLoading(false);
       return;
     }
-    
+
     const checkAuth = async () => {
       const {
         data: { user },
@@ -34,5 +34,5 @@ export const useAuthGuard = (redirectOnFailure = true) => {
     checkAuth();
   }, [router, pathname, redirectOnFailure]);
 
-  return { isAuthenticated, loading };
+  return { isAuthenticated, checkingAuth };
 };

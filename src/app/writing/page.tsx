@@ -7,9 +7,10 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
+import Spinner from "@/components/Spinner";
 
 export default function WritingPractice() {
-  const { isAuthenticated } = useAuthGuard(false);
+  const { checkingAuth, isAuthenticated } = useAuthGuard(false);
   const [inputText, setInputText] = useState("");
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
@@ -87,6 +88,8 @@ export default function WritingPractice() {
     recognitionRef.current?.abort();
     setIsRecording(false);
   };
+
+  if (checkingAuth) return <Spinner />;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-100 to-white px-4 py-10">

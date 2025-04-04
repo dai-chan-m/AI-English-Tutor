@@ -9,11 +9,7 @@ import vision from "@google-cloud/vision";
 // 環境変数からGoogle認証情報を取得して設定
 let credentials;
 if (process.env.GOOGLE_CREDENTIALS) {
-  try {
-    credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-  } catch (error) {
-    console.error("Failed to parse GOOGLE_CREDENTIALS:", error);
-  }
+  credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
 }
 
 const client = new vision.ImageAnnotatorClient({

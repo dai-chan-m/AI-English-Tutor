@@ -7,6 +7,7 @@ import { VOCAB_MODE } from "@/constants/app";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
 import Link from "next/link";
+import Spinner from "@/components/Spinner";
 
 type QuestionType = {
   questionCount: string;
@@ -18,7 +19,7 @@ type QuestionType = {
 };
 
 export default function Home() {
-  const { isAuthenticated } = useAuthGuard(false); // リダイレクトなし
+  const { checkingAuth, isAuthenticated } = useAuthGuard(false); // リダイレクトなし
   const [mode, setMode] = useState<"count" | "word">("count");
   const [words, setWords] = useState("");
   const [wordError, setWordError] = useState("");
@@ -78,6 +79,8 @@ export default function Home() {
     setLoading(false);
   };
   const makeableNumbers = isAuthenticated ? [5, 10, 15] : [5];
+
+  if (checkingAuth) return <Spinner />;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10 print:bg-white print:shadow-none print:border-none print:rounded-none">
