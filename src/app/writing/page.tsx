@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { startSpeechRecognition } from "@/utils/speechRecognition";
 import { OCRDropZone } from "@/components/OCRDropZone";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function WritingPractice() {
+  const { isAuthenticated } = useAuthGuard(false); // リダイレクトしないようにfalseを渡す
   const [inputText, setInputText] = useState("");
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
@@ -83,7 +85,10 @@ export default function WritingPractice() {
           />
 
           {/* ドロップゾーン（ログインしてるかで切り替え） */}
-          <OCRDropZone setInputText={setInputText} />
+          <OCRDropZone
+            setInputText={setInputText}
+            isAuthenticated={isAuthenticated}
+          />
 
           {/* 音声入力 */}
           <div className="text-right">

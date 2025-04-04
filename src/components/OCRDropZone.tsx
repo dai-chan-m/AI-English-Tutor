@@ -1,28 +1,28 @@
 "use client";
 
-import { useUser } from "@supabase/auth-helpers-react";
+import Link from "next/link";
 
 export function OCRDropZone({
   setInputText,
+  isAuthenticated,
 }: {
   setInputText: React.Dispatch<React.SetStateAction<string>>;
+  isAuthenticated: boolean;
 }) {
-  const user = useUser(); // ← ログイン状態取得！
-
-  if (!user) {
+  if (!isAuthenticated) {
     return (
       <div className="border-2 border-dashed border-gray-400 bg-gray-100 text-gray-500 text-sm text-center px-4 py-6 rounded-md space-y-2">
         <p>
-          🔒 この機能を使うには <strong>ログイン</strong> が必要です。
+          🔒 OCR機能を使うには <strong>ログイン</strong> が必要です。
         </p>
         <p>
           アカウントをお持ちでない方は
-          <a
+          <Link
             href="/signup"
             className="text-blue-600 hover:underline font-semibold"
           >
             無料ユーザー登録する
-          </a>
+          </Link>
         </p>
       </div>
     );

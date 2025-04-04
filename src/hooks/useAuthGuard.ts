@@ -2,15 +2,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabaseClient";
 
-export const useAuthGuard = () => {
+export const useAuthGuard = (redirectOnFailure = true) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // ログインページとサインアップページでは認証チェックをスキップ
+    if (pathname === "/login" || pathname === "/signup") {
+      setLoading(false);
+      return;
+    }
+    
     const checkAuth = async () => {
       const {
         data: { user },
@@ -18,14 +25,14 @@ export const useAuthGuard = () => {
 
       if (user) {
         setIsAuthenticated(true);
-      } else {
+      } else if (redirectOnFailure) {
         router.push("/login");
       }
       setLoading(false);
     };
 
     checkAuth();
-  }, [router]);
+  }, [router, pathname, redirectOnFailure]);
 
   return { isAuthenticated, loading };
 };

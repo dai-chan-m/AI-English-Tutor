@@ -3,6 +3,7 @@
 import { useState } from "react";
 import QuestionViewer from "@/components/QuestionViewer";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 type QuestionType = {
   questionCount: string;
@@ -14,6 +15,7 @@ type QuestionType = {
 };
 
 export default function Home() {
+  const { isAuthenticated } = useAuthGuard(false); // リダイレクトなし
   const [mode, setMode] = useState<"count" | "word">("count");
   const [words, setWords] = useState("");
   const [questionCount, setQuestionCount] = useState("");
@@ -50,6 +52,7 @@ export default function Home() {
     setResult(data.questions);
     setLoading(false);
   };
+  const makeableNumbers = isAuthenticated ? [5, 10, 15] : [5];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10 print:bg-white print:shadow-none print:border-none print:rounded-none">
@@ -105,7 +108,15 @@ export default function Home() {
                 transition={{ duration: 0.2 }}
               >
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  出題数（1〜10問）
+                  出題数　
+                  <span>
+                    ※ログインすると最大15問まで出題できます。
+                    <a>
+                      <span className="text-blue-600 hover:underline cursor-pointer">
+                        ログインする
+                      </span>
+                    </a>
+                  </span>
                 </label>
                 <select
                   value={questionCount}
@@ -113,7 +124,7 @@ export default function Home() {
                   className="w-full border border-gray-300 text-gray-700 rounded-md px-4 py-2"
                   disabled={loading || result?.length > 0}
                 >
-                  {[5, 10, 15].map((n) => (
+                  {makeableNumbers.map((n) => (
                     <option key={n} value={n}>
                       {n}問
                     </option>
