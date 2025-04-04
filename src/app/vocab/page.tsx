@@ -280,7 +280,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading || invalidInput}
-              className={`font-semibold px-6 py-2 rounded-lg transition
+              className={`font-semibold px-6 py-2 rounded-lg transition cursor-pointer
                 ${
                   loading
                     ? "bg-white cursor-not-allowed text-blue-600 border border-blue-600"

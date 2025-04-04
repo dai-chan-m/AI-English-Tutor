@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { startSpeechRecognition } from "@/utils/speechRecognition";
 import { OCRDropZone } from "@/components/OCRDropZone";
 import { WRITING_MODE } from "@/constants/app";
@@ -16,6 +16,8 @@ export default function WritingPractice() {
   const [loading, setLoading] = useState(false);
   const [tone, setTone] = useState("gentle");
   const [tab, setTab] = useState<"summary" | "feedback">("feedback");
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const MAX_LENGTH = isAuthenticated ? 1000 : 300;
   const remaining = MAX_LENGTH - inputText.length;
 
@@ -53,6 +55,39 @@ export default function WritingPractice() {
       .replace(/[^a-zA-Z0-9.,!?'"()\s]/g, "") // 不自然な記号を除去
       .replace(/\s+/g, " ") // 複数空白を1つに
       .trim();
+  };
+
+  /* 音声認識関連 */
+  const handleStart = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+
+    recognition.onresult = (event: any) => {
+      const spoken = event.results[0][0].transcript;
+      setInputText((prev) => `${prev} ${normalizeSentence(spoken)}`);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false); // 自然停止時も
+    };
+
+    recognition.onerror = (e: any) => {
+      console.error("Speech recognition error", e);
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  };
+
+  const handleStop = () => {
+    recognitionRef.current?.stop();
+    setIsRecording(false);
   };
 
   return (
@@ -119,18 +154,24 @@ export default function WritingPractice() {
           />
 
           {/* 音声入力 */}
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={() =>
-                startSpeechRecognition((spoken) =>
-                  setInputText((prev) => `${prev} ${normalizeSentence(spoken)}`)
-                )
-              }
-              className="text-sm text-blue-600 hover:underline cursor-pointer"
-            >
-              🎤 スピーキングで入力する
-            </button>
+          <div className="flex justify-end gap-4 mt-4">
+            {!isRecording ? (
+              <button
+                type="button"
+                onClick={handleStart}
+                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold shadow transition cursor-pointer"
+              >
+                🎤 音声入力開始
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleStop}
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold shadow transition cursor-pointer"
+              >
+                🔴 録音停止
+              </button>
+            )}
           </div>
 
           {/* 添削するボタン */}
