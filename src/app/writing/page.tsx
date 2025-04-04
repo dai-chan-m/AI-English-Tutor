@@ -80,6 +80,7 @@ export default function WritingPractice() {
 
   const handleStop = () => {
     recognitionRef.current?.stop();
+    recognitionRef.current?.abort();
     setIsRecording(false);
   };
 
