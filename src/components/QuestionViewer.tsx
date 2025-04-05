@@ -9,7 +9,7 @@ export type QuestionType = {
   answer: string;
   explanation_ja: string;
   Japanese: string;
-};
+} | null;
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
@@ -29,12 +29,50 @@ function QuestionViewer({ questions }: { questions: QuestionType[] }) {
   const [showNameField, setShowNameField] = useState(true);
 
   useEffect(() => {
-    const withShuffledChoices = questions.map((q) => ({
-      ...q,
-      choices: shuffleArray(q.choices),
-    }));
-    setShuffledQuestions(withShuffledChoices);
-    setAnswers(Array(questions.length).fill(null));
+    // nullを含まない有効な問題のみを処理
+    const filteredQuestions = questions.filter((q) => q !== null);
+
+    if (filteredQuestions.length > 0) {
+      // 選択肢をシャッフル
+      const withShuffledChoices = filteredQuestions.map((q) => {
+        // q.choicesが配列であることを確認
+        const choices = Array.isArray(q.choices) ? shuffleArray(q.choices) : [];
+        return {
+          ...q,
+          choices,
+        };
+      });
+
+      // 既存の問題と新規問題を調整
+      if (
+        shuffledQuestions.length > 0 &&
+        filteredQuestions.length > shuffledQuestions.length
+      ) {
+        // 追加された問題のみ処理
+        const newQuestions = filteredQuestions.slice(shuffledQuestions.length);
+        const newShuffledQuestions = newQuestions.map((q) => {
+          // 選択肢をシャッフル（存在チェック）
+          const choices = Array.isArray(q.choices)
+            ? shuffleArray(q.choices)
+            : [];
+          return {
+            ...q,
+            choices,
+          };
+        });
+
+        // 既存の問題と結合
+        setShuffledQuestions((prev) => [...prev, ...newShuffledQuestions]);
+        setAnswers((prev) => [
+          ...prev,
+          ...Array(newQuestions.length).fill(null),
+        ]);
+      } else {
+        // 初回またはリセット時
+        setShuffledQuestions(withShuffledChoices);
+        setAnswers(Array(filteredQuestions.length).fill(null));
+      }
+    }
   }, [questions]);
 
   const handleSelect = (qIndex: number, choice: string) => {
@@ -84,70 +122,72 @@ function QuestionViewer({ questions }: { questions: QuestionType[] }) {
 
       <div className="space-y-6 text-gray-900 text-lg whitespace-pre-wrap leading-relaxed">
         <div className="">
-          {shuffledQuestions.map((q, index) => {
-            const selected = answers[index];
-            const isCorrect = selected === q.answer;
+          {shuffledQuestions
+            .filter((q) => q !== null)
+            .map((q, index) => {
+              const selected = answers[index];
+              const isCorrect = selected === q.answer;
 
-            return (
-              <div key={index} className="bg-white p-4 print:shadow-none">
-                <p className="font-semibold text-lg mb-2">
-                  {index + 1}. {q.question}
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {q.choices.map((choice, i) => {
-                    const isSelected = selected === choice;
-                    const correct = q.answer === choice;
-                    const base =
-                      "px-4 py-2 border rounded cursor-pointer text-left transition print:border-none";
+              return (
+                <div key={index} className="bg-white p-4 print:shadow-none">
+                  <p className="font-semibold text-lg mb-2">
+                    {index + 1}. {q.question}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {q.choices.map((choice, i) => {
+                      const isSelected = selected === choice;
+                      const correct = q.answer === choice;
+                      const base =
+                        "px-4 py-2 border rounded cursor-pointer text-left transition print:border-none";
 
-                    const color =
-                      selected === null
-                        ? "hover:bg-gray-100"
-                        : correct
-                        ? "bg-green-100 border-green-400 text-green-700"
-                        : isSelected
-                        ? "bg-red-100 border-red-400 text-red-700"
-                        : "opacity-60";
+                      const color =
+                        selected === null
+                          ? "hover:bg-gray-100"
+                          : correct
+                          ? "bg-green-100 border-green-400 text-green-700"
+                          : isSelected
+                          ? "bg-red-100 border-red-400 text-red-700"
+                          : "opacity-60";
 
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => handleSelect(index, choice)}
-                        className={`${base} ${color} print:bg-white print:text-black`}
-                      >
-                        <span className="font-bold mr-2">
-                          {String.fromCharCode(65 + i)}.
-                        </span>
-                        {choice}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {selected && (
-                  <div className="mt-3 font-medium print:hidden space-y-1">
-                    <p>
-                      {isCorrect ? (
-                        <span className="text-green-600">✅ 正解！</span>
-                      ) : (
-                        <span className="text-red-600">
-                          ❌ 不正解。正解は「{q.answer}」
-                        </span>
-                      )}
-                    </p>
-                    {q.explanation_ja && (
-                      <p className="text-gray-700">
-                        💡 解説：{q.explanation_ja}
-                      </p>
-                    )}
-                    {q.Japanese && (
-                      <p className="text-gray-700">📘 和訳：{q.Japanese}</p>
-                    )}
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => handleSelect(index, choice)}
+                          className={`${base} ${color} print:bg-white print:text-black`}
+                        >
+                          <span className="font-bold mr-2">
+                            {String.fromCharCode(65 + i)}.
+                          </span>
+                          {choice}
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            );
-          })}
+
+                  {selected && (
+                    <div className="mt-3 font-medium print:hidden space-y-1">
+                      <p>
+                        {isCorrect ? (
+                          <span className="text-green-600">✅ 正解！</span>
+                        ) : (
+                          <span className="text-red-600">
+                            ❌ 不正解。正解は「{q.answer}」
+                          </span>
+                        )}
+                      </p>
+                      {q.explanation_ja && (
+                        <p className="text-gray-700">
+                          💡 解説：{q.explanation_ja}
+                        </p>
+                      )}
+                      {q.Japanese && (
+                        <p className="text-gray-700">📘 和訳：{q.Japanese}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
           <div className="text-center mt-10 print:hidden">
             <button

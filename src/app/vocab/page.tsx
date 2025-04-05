@@ -16,7 +16,7 @@ type QuestionType = {
   answer: string;
   explanation_ja: string;
   Japanese: string;
-};
+} | null;
 
 export default function Home() {
   const { checkingAuth, isAuthenticated } = useAuthGuard(false); // リダイレクトなし
@@ -28,6 +28,7 @@ export default function Home() {
   const [level, setLevel] = useState("CEFR preA1");
   const [length, setLength] = useState("11 to 15 words");
   const [result, setResult] = useState<QuestionType[]>([]);
+  const [completedCount, setCompletedCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const invalidInput = mode === "word" && (!!wordError || !words.trim());
 
@@ -58,11 +59,12 @@ export default function Home() {
       return;
     }
     setLoading(true);
+    setResult([]);
+    setCompletedCount(0);
 
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      // フォームデータの準備
+      const formData = {
         mode,
         words: words
           .split(",")
@@ -71,12 +73,81 @@ export default function Home() {
         questionCount,
         level,
         length,
-      }),
-    });
+      };
 
-    const data = await res.json();
-    setResult(data.questions);
-    setLoading(false);
+      // URLSearchParamsを使用してクエリパラメータを作成
+      const params = new URLSearchParams();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          params.append(key, JSON.stringify(value));
+        } else {
+          params.append(key, String(value));
+        }
+      });
+
+      // EventSourceを使用してSSEを処理
+      const url = `/api/generate?${params.toString()}`;
+      const eventSource = new EventSource(url);
+
+      // メッセージ受信ハンドラ
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        // 完了数を更新（進捗表示用）
+        if (data.completedCount) {
+          setCompletedCount(data.completedCount);
+        }
+
+        // 個々の問題を受け取った場合
+        if (data.singleQuestion) {
+          // コンソールに表示して確認
+
+          setResult((prevQuestions) => {
+            // 新しい問題を追加または置換
+            const newQuestions = [...prevQuestions];
+            if (data.questionIndex !== undefined) {
+              // インデックスが範囲内なら更新、それ以外は追加
+              if (data.questionIndex < newQuestions.length) {
+                newQuestions[data.questionIndex] = data.singleQuestion;
+              } else {
+                // インデックスが範囲外なら、その位置まで埋めて追加
+                while (newQuestions.length < data.questionIndex) {
+                  newQuestions.push(null); // プレースホルダーを追加
+                }
+                newQuestions.push(data.singleQuestion);
+              }
+            } else {
+              // インデックスがなければ末尾に追加
+              newQuestions.push(data.singleQuestion);
+            }
+            return newQuestions;
+          });
+        }
+
+        // 全ての問題を一度に受け取った場合（フォールバック）
+        else if (data.questions && Array.isArray(data.questions)) {
+          setResult(data.questions);
+        }
+
+        // 完全に終了したらクリーンアップ
+        if (data.isComplete) {
+          setLoading(false);
+          eventSource.close();
+        }
+      };
+
+      // エラーハンドラ
+      eventSource.onerror = (error) => {
+        setLoading(false);
+        eventSource.close();
+      };
+
+      return () => {
+        eventSource.close();
+      };
+    } catch (error) {
+      setLoading(false);
+    }
   };
   const makeableNumbers = isAuthenticated ? [5, 10, 15] : [5];
 
@@ -316,7 +387,10 @@ export default function Home() {
                       d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                     />
                   </svg>
-                  <span className="font-medium">問題作成中...</span>
+                  <span className="font-medium">
+                    問題作成中...
+                    {completedCount > 0 && `(${completedCount}問完了)`}
+                  </span>
                 </div>
               ) : result.length === 0 ? (
                 "問題を作成する"

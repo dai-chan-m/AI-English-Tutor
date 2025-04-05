@@ -78,7 +78,11 @@ ${text}
           for await (const chunk of stream) {
             const content = chunk.choices[0]?.delta?.content || "";
             accumulatedText += content;
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ feedback: accumulatedText })}\n\n`));
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ feedback: accumulatedText })}\n\n`
+              )
+            );
           }
           controller.close();
         },
@@ -87,20 +91,16 @@ ${text}
         headers: {
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache",
-          "Connection": "keep-alive",
+          Connection: "keep-alive",
         },
       }
     );
   } catch (error) {
-    console.error("GPT Feedback Error:", error);
-    return new Response(
-      JSON.stringify({ error: "添削に失敗しました。" }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return new Response(JSON.stringify({ error: "添削に失敗しました。" }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 }
