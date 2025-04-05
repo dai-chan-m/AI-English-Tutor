@@ -16,42 +16,48 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI English Tutor - AIがあなたの英語コーチに！",
+  title: "AI English Tutor - 英検・TOEIC対策に最適！AIが英語学習をサポート",
   description:
-    "AI Vocab Drill is a web application that generates English vocabulary tests using AI.",
+    "AIが英語学習をサポート。英検・TOEIC対策に最適な英単語ドリル自動生成と英作文添削。レベル別練習問題で効率的に英語力アップ。",
   keywords: [
-    "英語",
-    "小テスト",
-    "AI",
-    "英検",
-    "TOEIC",
-    "英単語",
-    "学習",
-    "プリント",
-    "Vocabulary",
     "英語学習",
+    "英検対策",
+    "TOEIC対策",
+    "英単語",
+    "英作文添削",
+    "AI英語教師",
+    "英語ドリル",
+    "英語練習問題",
+    "英語自動添削",
+    "英語テスト作成",
+    "オンライン英語学習",
+    "英語コーチ",
   ],
+  alternates: {
+    canonical: APP_URL,
+  },
   openGraph: {
-    title: APP_NAME + " - 英単語から英語小テストを自動作成！",
+    title: "AI English Tutor - 英検・TOEIC対策に最適なAI英語学習ツール",
     description:
-      "AIが英作文を添削、フィードバックします。英検やTOEICのレベルに合わせて小テストを自動生成！",
+      "AIが英作文を添削、英検・TOEICレベル別の英単語テストを自動生成。効率的に英語力アップを目指す学習者向けの最新ツール。",
     url: APP_URL,
     siteName: "AI English Tutor",
     images: [
       {
-        url: "/ogp.png", // 👈 public/ogp.png にある画像が読み込まれる
+        url: "/ogp.png",
         width: 1200,
         height: 630,
-        alt: APP_NAME + " OGP",
+        alt: "AI English Tutor - 英語学習支援ツール",
       },
     ],
+    locale: "ja_JP",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: APP_NAME + "英作文AI添削、英単語小テスト自動生成",
+    title: "AI English Tutor - 英検・TOEIC対策の最強ツール",
     description:
-      "AIが英作文を添削、フィードバックします。英検やTOEICのレベルに合わせて小テストを自動生成！",
+      "AIが英作文添削と英単語テスト自動生成。レベル別練習で効率的に英語力アップ。英語学習者必見のツール！",
     images: ["/ogp.png"],
   },
 };
@@ -62,7 +68,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <head>
         <Script
           async
@@ -74,6 +80,33 @@ export default function RootLayout({
           name="google-adsense-account"
           content="ca-pub-9298323846592641"
         ></meta>
+        <Script id="schema-jsonld" type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "AI English Tutor",
+              "description": "英検・TOEIC対策に最適なAI英語学習支援ツール。AIが英作文添削と英単語テストを自動生成します。",
+              "applicationCategory": "EducationalApplication",
+              "operatingSystem": "Any",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "JPY"
+              },
+              "audience": {
+                "@type": "Audience",
+                "name": "英語学習者"
+              },
+              "featureList": [
+                "AI英単語テスト自動生成",
+                "英作文AI添削",
+                "レベル別練習（英検/TOEIC対応）",
+                "日替わり英単語ドリル"
+              ]
+            }
+          `}
+        </Script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
