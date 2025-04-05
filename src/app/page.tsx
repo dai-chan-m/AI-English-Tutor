@@ -45,7 +45,7 @@ export default function Home() {
           <ul className="list-inside list-none space-y-1 text-sm text-gray-700 text-left">
             <li>✅ 英作文をAIが自動添削＆フィードバック</li>
             <li>✅ 日本語で丁寧な解説付き</li>
-            <li>✅ 音声入力やOCRも試験運用中 🎤📷</li>
+            <li>✅ 手書きを写真で送信📷 音声入力もできます🎤</li>
           </ul>
         </div>
       </div>
