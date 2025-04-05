@@ -7,12 +7,32 @@ import Spinner from "@/components/Spinner";
 export default function DailyAdmin() {
   const { checkingAuth, isAuthenticated } = useAuthGuard(true); // リダイレクト有効
   const [loading, setLoading] = useState(false);
+  const [writingLoading, setWritingLoading] = useState(false);
   const [result, setResult] = useState("");
+  const [writingResult, setWritingResult] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("CEFR A2–B1"); // 英作文レベルの初期値
+
+  // レベルマッピング
+  const levelMapping: Record<string, { eiken: string; toeic: string }> = {
+    "CEFR preA1": { eiken: "英検5級", toeic: "TOEIC 300以下" },
+    "CEFR A1": { eiken: "英検4級", toeic: "TOEIC 300-400" },
+    "CEFR A1–A2": { eiken: "英検3級", toeic: "TOEIC 400-500" },
+    "CEFR A2–B1": { eiken: "英検準2級", toeic: "TOEIC 500-600" },
+    "CEFR B1〜B2": { eiken: "英検2級", toeic: "TOEIC 600-700" },
+    "CEFR B2〜C1": { eiken: "英検準1級", toeic: "TOEIC 700-800" },
+    "CEFR C2": { eiken: "英検1級", toeic: "TOEIC 900+" },
+    "TOEIC400 CEFR A2": { eiken: "英検4-3級程度", toeic: "TOEIC 400" },
+    "TOEIC500 CEFR A2+": { eiken: "英検3級程度", toeic: "TOEIC 500" },
+    "TOEIC600 CEFR B1": { eiken: "英検準2級程度", toeic: "TOEIC 600" },
+    "TOEIC700 CEFR B1+": { eiken: "英検2級程度", toeic: "TOEIC 700" },
+    "TOEIC800 CEFR B2+": { eiken: "英検準1級程度", toeic: "TOEIC 800" },
+    "TOEIC900 CEFR C1": { eiken: "英検1級程度", toeic: "TOEIC 900+" },
+  };
 
   const generateDailyQuestion = async () => {
     setLoading(true);
     setResult("");
-    
+
     try {
       // URLSearchParamsを使用してクエリパラメータを作成
       const params = new URLSearchParams();
@@ -20,16 +40,46 @@ export default function DailyAdmin() {
       params.append("questionCount", "10");
       params.append("level", "CEFR preA1");
       params.append("length", "11 to 15 words");
-      
+
       const response = await fetch(`/api/generate?${params.toString()}`);
       const data = await response.json();
-      
+
       setResult(JSON.stringify(data, null, 2));
     } catch (error) {
       console.error("Error generating daily question:", error);
-      setResult("エラーが発生しました: " + (error instanceof Error ? error.message : String(error)));
+      setResult(
+        "エラーが発生しました: " +
+          (error instanceof Error ? error.message : String(error))
+      );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateWritingPrompt = async () => {
+    setWritingLoading(true);
+    setWritingResult("");
+
+    try {
+      // URLSearchParamsを使用してクエリパラメータを作成
+      const params = new URLSearchParams();
+      params.append("level", selectedLevel);
+      params.append("isAdmin", "true"); // 管理者であることを明示
+
+      const response = await fetch(
+        `/api/generate/writing?${params.toString()}`
+      );
+      const data = await response.json();
+
+      setWritingResult(JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error("Error generating writing prompt:", error);
+      setWritingResult(
+        "エラーが発生しました: " +
+          (error instanceof Error ? error.message : String(error))
+      );
+    } finally {
+      setWritingLoading(false);
     }
   };
 
@@ -42,14 +92,16 @@ export default function DailyAdmin() {
   return (
     <div className="max-w-4xl mx-auto p-8">
       <h1 className="text-2xl font-bold mb-6">日替わり問題管理</h1>
-      
+
       <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">新しい日替わり問題を生成</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          新しい日替わり単語問題を生成
+        </h2>
         <p className="text-gray-600 mb-4">
           「日替わり問題の作成」ボタンをクリックすると、自動的に新しい問題が作成されます。
           この処理には30秒ほどかかる場合があります。
         </p>
-        
+
         <button
           onClick={generateDailyQuestion}
           disabled={loading}
@@ -57,14 +109,61 @@ export default function DailyAdmin() {
             loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {loading ? "作成中..." : "日替わり問題の作成"}
+          {loading ? "作成中..." : "日替わり単語問題の作成"}
         </button>
-        
+
         {result && (
           <div className="mt-6">
-            <h3 className="font-semibold mb-2">結果:</h3>
-            <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-80 text-sm">
+            <h3 className="font-semibold mb-2 text-black">結果:</h3>
+            <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-80 text-sm text-black">
               {result}
+            </pre>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4">
+          新しい日替わり英作文のお題を生成
+        </h2>
+        <p className="text-gray-600 mb-4">
+          英作文のレベルを選択して、「日替わり英作文の作成」ボタンをクリックすると、自動的に新しいお題と模範解答が作成されます。
+          この処理には30秒ほどかかる場合があります。
+        </p>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            英作文のレベル
+          </label>
+          <select
+            value={selectedLevel}
+            onChange={(e) => setSelectedLevel(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-4 py-2 text-gray-800"
+          >
+            {Object.keys(levelMapping).map((level) => (
+              <option key={level} value={level}>
+                {level} ({levelMapping[level].eiken} /{" "}
+                {levelMapping[level].toeic})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          onClick={generateWritingPrompt}
+          disabled={writingLoading}
+          className={`px-6 py-3 rounded-lg text-white font-bold ${
+            writingLoading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+          }`}
+        >
+          {writingLoading ? "作成中..." : "日替わり英作文の作成"}
+        </button>
+
+        {writingResult && (
+          <div className="mt-6">
+            <h3 className="font-semibold mb-2 text-black">結果:</h3>
+            <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-80 text-sm text-black">
+              {writingResult}
             </pre>
           </div>
         )}

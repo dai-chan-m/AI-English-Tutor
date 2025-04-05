@@ -72,8 +72,10 @@ export default function Home() {
             <li>✅ 手書き英作文の写真📷や音声入力🎤にも対応</li>
           </ul>
         </div>
+        
+        {/* 日替わり英単語ドリル */}
         <div
-          className="bg-white border border-yellow-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer w-full max-w-4xl"
+          className="bg-white border border-yellow-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
           onClick={() => router.push("/daily")}
         >
           <h2 className="text-2xl font-semibold text-yellow-600 mb-4">
@@ -92,6 +94,32 @@ export default function Home() {
               頻出単語を効率的に学習
             </li>
             <li>✅ 過去問アーカイブで復習も簡単</li>
+          </ul>
+        </div>
+        
+        {/* 日替わり英作文 */}
+        <div
+          className="bg-white border border-green-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
+          onClick={() => router.push("/daily/writing")}
+        >
+          <h2 className="text-2xl font-semibold text-green-600 mb-4">
+            ✍️ 日替わり英作文
+          </h2>
+          <p className="text-gray-500 text-sm mb-3">
+            毎日更新！英作文スキルアップ
+          </p>
+          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
+            <li>
+              ✅ 多彩な<span className="font-medium">英作文トピック</span>
+              に取り組む
+            </li>
+            <li>
+              ✅ <span className="font-medium">レベル別</span>
+              のお題で自分のペースで学習
+            </li>
+            <li>
+              ✅ <span className="font-medium">模範解答</span>を参考に表現力を磨く
+            </li>
           </ul>
         </div>
       </div>
