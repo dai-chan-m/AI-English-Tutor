@@ -25,7 +25,7 @@
 
 ## 🚀 デモ
 
-👉 [アプリを試す](https://ai-vocab-drill.vercel.app/)
+👉 [アプリを試す](https://ai-english-tutor.xyz)
 
 ---
 

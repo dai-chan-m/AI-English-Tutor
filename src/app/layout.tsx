@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SupabaseProvider from "@/components/SupabaseProvider";
-import { APP_NAME } from "@/constants/app";
+import { APP_NAME, APP_URL } from "@/constants/app";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     title: APP_NAME + " - 英単語から英語小テストを自動作成！",
     description:
       "AIが英作文を添削、フィードバックします。英検やTOEICのレベルに合わせて小テストを自動生成！",
-    url: "https://ai-english-tutor-gamma.vercel.app",
+    url: APP_URL,
     siteName: "AI English Tutor",
     images: [
       {

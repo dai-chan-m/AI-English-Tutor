@@ -16,7 +16,7 @@ export default function ContactPage() {
           </p>
 
           <form
-            action="https://formsubmit.co/your.email@example.com"
+            action="https://formsubmit.co/d.mashiko0801@gmail.com"
             method="POST"
             className="space-y-4"
           >
