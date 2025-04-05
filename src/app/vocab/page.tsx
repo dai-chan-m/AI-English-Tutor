@@ -138,6 +138,7 @@ export default function Home() {
 
       // エラーハンドラ
       eventSource.onerror = (error) => {
+        console.error("EventSource error:", error);
         setLoading(false);
         eventSource.close();
       };
@@ -146,6 +147,7 @@ export default function Home() {
         eventSource.close();
       };
     } catch (error) {
+      console.error("Error:", error);
       setLoading(false);
     }
   };
