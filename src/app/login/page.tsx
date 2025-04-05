@@ -39,7 +39,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50 px-4">
       <ServiceLogo />
-      <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md animate-fade-in">
+      <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md animate-fade-in mt-20">
         <h1 className="text-3xl font-bold text-center text-green-600 mb-4">
           ログイン
         </h1>

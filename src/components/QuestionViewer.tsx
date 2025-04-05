@@ -73,7 +73,7 @@ function QuestionViewer({ questions }: { questions: QuestionType[] }) {
         setAnswers(Array(filteredQuestions.length).fill(null));
       }
     }
-  }, [questions]);
+  }, [questions, shuffledQuestions.length]);
 
   const handleSelect = (qIndex: number, choice: string) => {
     const updated = [...answers];

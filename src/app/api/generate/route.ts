@@ -2,6 +2,7 @@
 import { OpenAI } from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { generatePrompt } from "@/lib/generatePrompt";
+import { saveDailyQuestionSet } from "@/lib/saveDailyQuestion";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -48,7 +49,8 @@ export async function GET(req: NextRequest) {
     // 問題追跡用のクロージャ
     let lastSentCount = 0;
     // リクエストされた問題数を数値変換
-    const requestedQuestionCount = mode === "word" ? words.length : parseInt(questionCount, 10);
+    const requestedQuestionCount =
+      mode === "word" ? words.length : parseInt(questionCount, 10);
 
     return new Response(
       new ReadableStream({
@@ -61,8 +63,6 @@ export async function GET(req: NextRequest) {
             // JSON文字列を直接解析するのではなく、文字単位で構造を分析
 
             try {
-              console.log("Received new chunk:", content); // デバッグ用
-
               // もっとシンプルに、現在の全応答からオブジェクトを抽出
               const responseText = fullResponse.trim();
 
@@ -123,7 +123,6 @@ export async function GET(req: NextRequest) {
                       if (objects.length > lastSentCount) {
                         for (let j = lastSentCount; j < objects.length; j++) {
                           // 単一の問題を送信
-                          console.log("Sending object:", objects[j]); // デバッグ用
                           controller.enqueue(
                             encoder.encode(
                               `data: ${JSON.stringify({
@@ -151,14 +150,16 @@ export async function GET(req: NextRequest) {
           // ストリーム終了時に完全な結果を送信
           try {
             const finalResult = JSON.parse(fullResponse.trim());
-            
+
             // 問題数のチェックと対応
             if (finalResult.length < requestedQuestionCount) {
-              console.log(`Warning: Received ${finalResult.length} questions but requested ${requestedQuestionCount}`);
-              
+              console.log(
+                `Warning: Received ${finalResult.length} questions but requested ${requestedQuestionCount}`
+              );
+
               // 不足している問題数を計算
               const missingCount = requestedQuestionCount - finalResult.length;
-              
+
               // 問題数が不足している場合、足りない分を追加生成するためのリクエスト
               if (missingCount > 0) {
                 const additionalPrompt = generatePrompt({
@@ -168,21 +169,29 @@ export async function GET(req: NextRequest) {
                   level,
                   length,
                 });
-                
-                const additionalResponse = await openai.chat.completions.create({
-                  model: "gpt-3.5-turbo",
-                  messages: [{ role: "user", content: additionalPrompt }],
-                });
-                
-                const additionalContent = additionalResponse.choices[0].message?.content ?? "";
-                
+
+                const additionalResponse = await openai.chat.completions.create(
+                  {
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "user", content: additionalPrompt }],
+                  }
+                );
+
+                const additionalContent =
+                  additionalResponse.choices[0].message?.content ?? "";
+
                 try {
                   // 追加の問題を解析
-                  const additionalQuestions = JSON.parse(additionalContent.trim());
-                  
+                  const additionalQuestions = JSON.parse(
+                    additionalContent.trim()
+                  );
+
                   // 元の問題と追加の問題を結合
-                  const combinedResult = [...finalResult, ...additionalQuestions];
-                  
+                  const combinedResult = [
+                    ...finalResult,
+                    ...additionalQuestions,
+                  ];
+
                   // 最終的に結合した問題セットを送信
                   controller.enqueue(
                     encoder.encode(
@@ -238,6 +247,31 @@ export async function GET(req: NextRequest) {
               )
             );
           }
+          // fullResponse の JSON がちゃんとパースできたら
+          const finalResult = JSON.parse(fullResponse.trim());
+
+          const fixedQuestions =
+            finalResult.length === 10
+              ? finalResult
+              : finalResult.length > 10
+              ? finalResult.slice(0, 10)
+              : null;
+
+          if (fixedQuestions) {
+            try {
+              await saveDailyQuestionSet({
+                level,
+                mode,
+                source_words: mode === "word" ? words : null,
+                questions: fixedQuestions,
+              });
+              console.log("✅ 保存完了！");
+            } catch (e) {
+              console.error("❌ 保存失敗:", e);
+            }
+          } else {
+            console.log("📭 保存スキップ：10問未満");
+          }
 
           controller.close();
         },
@@ -266,9 +300,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { mode, words, questionCount, level, length } = await req.json();
-    
+
     // リクエストされた問題数を数値変換
-    const requestedQuestionCount = mode === "word" ? words.length : parseInt(questionCount, 10);
+    const requestedQuestionCount =
+      mode === "word" ? words.length : parseInt(questionCount, 10);
 
     const prompt = generatePrompt({
       mode,
@@ -287,14 +322,16 @@ export async function POST(req: NextRequest) {
 
     try {
       const parsed = JSON.parse(result);
-      
+
       // 問題数のチェックと対応
       if (parsed.length < requestedQuestionCount) {
-        console.log(`Warning: Received ${parsed.length} questions but requested ${requestedQuestionCount}`);
-        
+        console.log(
+          `Warning: Received ${parsed.length} questions but requested ${requestedQuestionCount}`
+        );
+
         // 不足している問題数を計算
         const missingCount = requestedQuestionCount - parsed.length;
-        
+
         // 問題数が不足している場合、足りない分を追加生成するためのリクエスト
         if (missingCount > 0) {
           const additionalPrompt = generatePrompt({
@@ -304,21 +341,40 @@ export async function POST(req: NextRequest) {
             level,
             length,
           });
-          
+
           const additionalResponse = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [{ role: "user", content: additionalPrompt }],
           });
-          
-          const additionalContent = additionalResponse.choices[0].message?.content ?? "";
-          
+
+          const additionalContent =
+            additionalResponse.choices[0].message?.content ?? "";
+
           try {
             // 追加の問題を解析
             const additionalQuestions = JSON.parse(additionalContent.trim());
-            
+
             // 元の問題と追加の問題を結合
             const combinedResult = [...parsed, ...additionalQuestions];
-            
+
+            // 問題をdbに保存
+            if (combinedResult.length === 10) {
+              await saveDailyQuestionSet({
+                level,
+                mode,
+                source_words: mode === "word" ? words : null,
+                questions: combinedResult,
+              });
+            } else if (combinedResult.length > 10) {
+              await saveDailyQuestionSet({
+                level,
+                mode,
+                source_words: mode === "word" ? words : null,
+                questions: combinedResult.slice(0, 10),
+              });
+            } else {
+              console.log("保存スキップ：問題数が10未満");
+            }
             // 最終的に結合した問題セットを返す
             return NextResponse.json({ questions: combinedResult });
           } catch (e) {

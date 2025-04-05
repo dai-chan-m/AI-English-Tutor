@@ -36,7 +36,7 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-100 to-white px-4 py-10">
       <ServiceLogo />
-      <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md space-y-6">
+      <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md space-y-6 mt-8">
         <h2 className="text-3xl font-bold text-center text-blue-700">
           アカウント作成
         </h2>

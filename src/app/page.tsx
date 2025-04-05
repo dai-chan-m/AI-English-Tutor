@@ -48,7 +48,22 @@ export default function Home() {
             <li>✅ 手書きを写真で送信📷 音声入力もできます🎤</li>
           </ul>
         </div>
+        <div
+          className="bg-white border border-yellow-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer w-full max-w-4xl"
+          onClick={() => router.push("/daily")}
+        >
+          <h2 className="text-2xl font-semibold text-yellow-600 mb-4">
+            📅 日替わり英単語ドリル
+          </h2>
+          <ul className="list-inside list-none space-y-1 text-sm text-gray-700 text-left">
+            <li>✅ AIが自動生成した問題を毎日更新！</li>
+            <li>✅ 過去の問題も一覧からいつでも挑戦可能</li>
+            <li>✅ AI Vocab Drillで作成された問題を掲載</li>
+          </ul>
+        </div>
       </div>
+
+      {/* 日替わり英単語ドリル */}
       <Footer />
     </main>
   );
