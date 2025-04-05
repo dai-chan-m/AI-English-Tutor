@@ -26,15 +26,57 @@ export default function WritingPractice() {
     setLoading(true);
     setFeedback("");
 
-    const res = await fetch("/api/feedback", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: inputText, tone }),
-    });
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: inputText, tone }),
+      });
 
-    const data = await res.json();
-    setFeedback(data.feedback);
-    setLoading(false);
+      if (!res.ok) {
+        throw new Error("API request failed");
+      }
+
+      if (res.headers.get("Content-Type")?.includes("text/event-stream")) {
+        const reader = res.body?.getReader();
+        if (!reader) throw new Error("Response body is empty");
+
+        // EventSourceの代わりにReadableStreamを手動で処理
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+
+          // Server-Sent Events形式でパース
+          const lines = buffer.split("\n\n");
+          buffer = lines.pop() || ""; // 最後の不完全な部分を保持
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const jsonStr = line.slice(6); // "data: "の後ろの部分
+                const parsedData = JSON.parse(jsonStr);
+                setFeedback(parsedData.feedback || "");
+              } catch (e) {
+                console.error("Failed to parse stream chunk", e);
+              }
+            }
+          }
+        }
+      } else {
+        const data = await res.json();
+        setFeedback(data.feedback || "");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setFeedback("エラーが発生しました。もう一度試してください。");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const extractSummaryFromFeedback = (text: string) => {
@@ -52,9 +94,7 @@ export default function WritingPractice() {
   const cleanOcrText = (text: string): string => {
     return text
       .replace(/\|/g, "I") // 「|」を大文字のIに補正
-      .replace(/[^a-zA-Z0-9.,!?'"()\s]/g, "") // 不自然な記号を除去
-      .replace(/\s+/g, " ") // 複数空白を1つに
-      .trim();
+      .replace(/[^a-zA-Z0-9.,!?'"()\s]/g, ""); // 不自然な記号を除去
   };
 
   /* 音声認識関連 */
@@ -212,11 +252,16 @@ export default function WritingPractice() {
             </button>
           </div>
         )}
-        {tab == "feedback" && feedback && (
+        {tab == "feedback" && (loading || feedback) && (
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-md p-4 whitespace-pre-wrap text-gray-800">
             <h2 className="text-lg font-semibold mb-2 text-green-700">
               フィードバック
             </h2>
+            {loading && !feedback && (
+              <div className="flex justify-center items-center my-4">
+                <div className="w-6 h-6 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
             {feedback}
           </div>
         )}

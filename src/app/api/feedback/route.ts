@@ -1,6 +1,6 @@
 // src/app/api/feedback/route.ts
 import { OpenAI } from "openai";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -64,19 +64,43 @@ ${text}
 `;
 
   try {
-    const response = await openai.chat.completions.create({
+    const encoder = new TextEncoder();
+    const stream = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
+      stream: true,
     });
 
-    const reply = response.choices[0].message?.content ?? "";
-
-    return NextResponse.json({ feedback: reply });
+    return new Response(
+      new ReadableStream({
+        async start(controller) {
+          let accumulatedText = "";
+          for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            accumulatedText += content;
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ feedback: accumulatedText })}\n\n`));
+          }
+          controller.close();
+        },
+      }),
+      {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      }
+    );
   } catch (error) {
     console.error("GPT Feedback Error:", error);
-    return NextResponse.json(
-      { error: "添削に失敗しました。" },
-      { status: 500 }
+    return new Response(
+      JSON.stringify({ error: "添削に失敗しました。" }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
   }
 }
