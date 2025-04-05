@@ -70,6 +70,10 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="lazyOnload"
         />
+        <meta
+          name="google-adsense-account"
+          content="ca-pub-9298323846592641"
+        ></meta>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
