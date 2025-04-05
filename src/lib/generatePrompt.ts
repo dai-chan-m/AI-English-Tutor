@@ -83,7 +83,9 @@ export function generatePrompt({
   - At least two incorrect choices must feel clearly unnatural or incorrect in the sentence.
   - The sentence must support only ONE best answer.
   - Avoid overly generic patterns like "can ___ well" unless the verb choice makes a clear difference.
-  - Make sure total number of questions is exactly ${words.length}.
+  - EXTREMELY IMPORTANT: You MUST generate EXACTLY ${words.length} questions. No more, no less.
+  - Failure to generate exactly ${words.length} questions will result in an invalid response.
+  - Count carefully before finalizing your output.
 
   Each output item must include the following fields:
   - word
@@ -93,7 +95,7 @@ export function generatePrompt({
   - explanation_ja (a brief explanation in Japanese, about why the answer is correct)
   - Japanese (the Japanese translation of the question)
 
-## If any field is missing, the output is invalid.
+## If any field is missing or if you don't provide exactly ${words.length} questions, the output is invalid.
   
   Start now.
   `.trim();
@@ -169,7 +171,9 @@ export function generatePrompt({
   - At least two incorrect choices must feel clearly unnatural or incorrect in the sentence.
   - The sentence must support only ONE best answer.
   - Avoid overly generic patterns like "can ___ well" unless the verb choice makes a clear difference.
-  - Make sure total number of questions is exactly ${questionCount}.
+  - EXTREMELY IMPORTANT: You MUST generate EXACTLY ${questionCount} questions. No more, no less.
+  - Failure to generate exactly ${questionCount} questions will result in an invalid response.
+  - Count carefully before finalizing your output.
 
   Each output item must include the following fields:
   - word
@@ -179,7 +183,7 @@ export function generatePrompt({
   - explanation_ja (a brief explanation in Japanese, about why the answer is correct)
   - Japanese (the Japanese translation of the question)
 
-## If any field is missing, the output is invalid.
+## If any field is missing or if you don't provide exactly ${questionCount} questions, the output is invalid.
   
   Start now.
   `.trim();
