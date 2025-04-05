@@ -149,7 +149,19 @@ export async function GET(req: NextRequest) {
 
           // ストリーム終了時に完全な結果を送信
           try {
-            const finalResult = JSON.parse(fullResponse.trim());
+            let finalResult = JSON.parse(fullResponse.trim());
+            
+            // 各問題について、回答が選択肢に含まれているかをチェック
+            finalResult = finalResult.map(question => {
+              // 回答が選択肢に含まれていない場合は追加
+              if (question.choices && !question.choices.includes(question.answer)) {
+                console.log(`Warning: Answer "${question.answer}" not found in choices, fixing...`);
+                // 選択肢の最後の項目を回答に置き換える
+                const updatedChoices = [...question.choices.slice(0, 3), question.answer];
+                return {...question, choices: updatedChoices};
+              }
+              return question;
+            });
 
             // 問題数のチェックと対応
             if (finalResult.length < requestedQuestionCount) {
@@ -182,9 +194,19 @@ export async function GET(req: NextRequest) {
 
                 try {
                   // 追加の問題を解析
-                  const additionalQuestions = JSON.parse(
+                  let additionalQuestions = JSON.parse(
                     additionalContent.trim()
                   );
+                  
+                  // 追加問題についても回答が選択肢に含まれているかチェック
+                  additionalQuestions = additionalQuestions.map(question => {
+                    if (question.choices && !question.choices.includes(question.answer)) {
+                      console.log(`Warning: Answer "${question.answer}" not found in choices, fixing...`);
+                      const updatedChoices = [...question.choices.slice(0, 3), question.answer];
+                      return {...question, choices: updatedChoices};
+                    }
+                    return question;
+                  });
 
                   // 元の問題と追加の問題を結合
                   const combinedResult = [
@@ -321,7 +343,19 @@ export async function POST(req: NextRequest) {
     const result = response.choices[0].message?.content ?? "";
 
     try {
-      const parsed = JSON.parse(result);
+      let parsed = JSON.parse(result);
+      
+      // 各問題について、回答が選択肢に含まれているかをチェック
+      parsed = parsed.map(question => {
+        // 回答が選択肢に含まれていない場合は追加
+        if (question.choices && !question.choices.includes(question.answer)) {
+          console.log(`Warning: Answer "${question.answer}" not found in choices, fixing...`);
+          // 選択肢の最後の項目を回答に置き換える
+          const updatedChoices = [...question.choices.slice(0, 3), question.answer];
+          return {...question, choices: updatedChoices};
+        }
+        return question;
+      });
 
       // 問題数のチェックと対応
       if (parsed.length < requestedQuestionCount) {
@@ -352,7 +386,17 @@ export async function POST(req: NextRequest) {
 
           try {
             // 追加の問題を解析
-            const additionalQuestions = JSON.parse(additionalContent.trim());
+            let additionalQuestions = JSON.parse(additionalContent.trim());
+            
+            // 追加問題についても回答が選択肢に含まれているかチェック
+            additionalQuestions = additionalQuestions.map(question => {
+              if (question.choices && !question.choices.includes(question.answer)) {
+                console.log(`Warning: Answer "${question.answer}" not found in choices, fixing...`);
+                const updatedChoices = [...question.choices.slice(0, 3), question.answer];
+                return {...question, choices: updatedChoices};
+              }
+              return question;
+            });
 
             // 元の問題と追加の問題を結合
             const combinedResult = [...parsed, ...additionalQuestions];
