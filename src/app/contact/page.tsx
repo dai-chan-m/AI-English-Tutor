@@ -31,7 +31,7 @@ export default function ContactPage() {
                 type="text"
                 name="name"
                 required
-                className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none"
+                className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none text-gray-700"
               />
             </div>
 
@@ -43,7 +43,7 @@ export default function ContactPage() {
                 type="email"
                 name="email"
                 required
-                className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none"
+                className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none text-gray-700"
               />
             </div>
 
@@ -55,7 +55,7 @@ export default function ContactPage() {
                 name="message"
                 rows={5}
                 required
-                className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none"
+                className="mt-1 w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none text-gray-700"
               />
             </div>
 
