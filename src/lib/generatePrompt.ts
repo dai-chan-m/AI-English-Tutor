@@ -85,6 +85,7 @@ export function generatePrompt({
   - Avoid overly generic patterns like "can ___ well" unless the verb choice makes a clear difference.
   - CRITICAL: The correct answer MUST be included in the choices array. For each question, verify that the value of "answer" is present in the "choices" array.
   - EXTREMELY IMPORTANT: You MUST generate EXACTLY ${words.length} questions. No more, no less.
+  - YOUR PRIMARY TASK IS TO GENERATE ${words.length} COMPLETE QUESTIONS. THIS IS THE MOST IMPORTANT REQUIREMENT.
   - Failure to generate exactly ${words.length} questions will result in an invalid response.
   - Count carefully before finalizing your output.
 
@@ -174,6 +175,7 @@ export function generatePrompt({
   - Avoid overly generic patterns like "can ___ well" unless the verb choice makes a clear difference.
   - CRITICAL: The correct answer MUST be included in the choices array. For each question, verify that the value of "answer" is present in the "choices" array.
   - EXTREMELY IMPORTANT: You MUST generate EXACTLY ${questionCount} questions. No more, no less.
+  - YOUR PRIMARY TASK IS TO GENERATE ${questionCount} COMPLETE QUESTIONS. THIS IS THE MOST IMPORTANT REQUIREMENT.
   - Failure to generate exactly ${questionCount} questions will result in an invalid response.
   - Count carefully before finalizing your output.
 
