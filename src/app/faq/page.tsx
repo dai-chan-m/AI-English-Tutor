@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
+import Link from "next/link";
 
 export default function FAQPage() {
   return (
@@ -43,9 +44,9 @@ export default function FAQPage() {
           </h2>
           <p className="text-sm">
             もちろんです。教育用途でのご利用は大歓迎です。複数人での利用や導入に関するご相談も、お気軽に
-            <a href="/contact" className="text-blue-600 underline ml-1">
+            <Link href="/contact" className="text-blue-600 underline ml-1">
               お問い合わせ
-            </a>
+            </Link>
             ください。
           </p>
         </section>

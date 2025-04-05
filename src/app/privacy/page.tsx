@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
+import Link from "next/link";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -57,9 +58,9 @@ export default function PrivacyPolicyPage() {
           </h2>
           <p>
             プライバシーに関するご質問は、
-            <a href="/contact" className="text-blue-600 underline">
+            <Link href="/contact" className="text-blue-600 underline">
               こちら
-            </a>
+            </Link>
             よりご連絡ください。
           </p>
         </section>

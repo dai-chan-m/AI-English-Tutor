@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
+import Link from "next/link";
 
 export default function ContactThanksPage() {
   return (
@@ -14,7 +15,14 @@ export default function ContactThanksPage() {
             内容を確認のうえ、必要に応じてご返信いたします。
           </p>
         </div>
-
+        <div className="text-center mt-6">
+          <Link
+            href="/"
+            className="inline-block bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+          >
+            ホームに戻る
+          </Link>
+        </div>
         <Footer />
       </div>
     </main>

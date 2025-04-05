@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
+import { APP_URL } from "@/constants/app";
 
 export default function ContactPage() {
   return (
@@ -20,7 +21,11 @@ export default function ContactPage() {
             method="POST"
             className="space-y-4"
           >
-            <input type="hidden" name="_next" value="/contact/thanks" />
+            <input
+              type="hidden"
+              name="_next"
+              value={APP_URL + "/contact/thanks"}
+            />
             <input type="hidden" name="_captcha" value="false" />
 
             <div>

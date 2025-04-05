@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
+import Link from "next/link";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -100,9 +101,9 @@ export default function SignUpPage() {
         {!success && (
           <div className="text-center pt-2 text-sm text-gray-600">
             すでにアカウントをお持ちの方は{" "}
-            <a href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-blue-600 hover:underline">
               ログイン
-            </a>
+            </Link>
           </div>
         )}
         <Footer />
