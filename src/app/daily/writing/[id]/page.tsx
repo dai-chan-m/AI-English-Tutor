@@ -118,15 +118,15 @@ export default function DailyWritingDetailPage() {
   /* 音声認識関連 */
   const handleStart = () => {
     // クライアントサイドでのみ実行する
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('お使いのブラウザは音声認識をサポートしていません');
+      alert("お使いのブラウザは音声認識をサポートしていません");
       return;
     }
-    
+
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
     recognition.continuous = false;
@@ -224,7 +224,7 @@ export default function DailyWritingDetailPage() {
     return matches.map((m) => `💠 ${m[1]}`).join("\n");
   };
 
-  if (loading)
+  if (loading || checkingAuth)
     return (
       <div className="min-h-screen flex justify-center items-center">
         <Spinner />
@@ -328,13 +328,13 @@ export default function DailyWritingDetailPage() {
               <span className="font-semibold">1000文字</span> まで入力できます。
             </div>
           )}
-          
+
           {/* ドロップゾーン（OCR機能） */}
           <OCRDropZone
             setInputText={setUserEssay}
             isAuthenticated={isAuthenticated}
           />
-          
+
           {/* 音声入力 */}
           <div className="flex justify-end gap-4 mt-4">
             {!isRecording ? (
@@ -368,7 +368,7 @@ export default function DailyWritingDetailPage() {
             >
               {feedbackLoading ? "添削中..." : "添削してもらう"}
             </button>
-            
+
             {prompt.model_answer && (
               <button
                 type="button"
@@ -380,7 +380,6 @@ export default function DailyWritingDetailPage() {
             )}
           </div>
         </div>
-
 
         {/* タブUI (フィードバック、添削後の文、模範解答) */}
         {(feedback || prompt?.model_answer) && (
@@ -423,7 +422,7 @@ export default function DailyWritingDetailPage() {
                 </button>
               )}
             </div>
-            
+
             {/* フィードバックタブ */}
             {tab === "feedback" && feedback && (
               <div className="bg-gray-50 border border-gray-200 rounded-md p-4 whitespace-pre-wrap text-gray-800">
@@ -438,14 +437,14 @@ export default function DailyWritingDetailPage() {
                 {feedback}
               </div>
             )}
-            
+
             {/* 添削後の文タブ */}
             {tab === "summary" && feedback && (
               <div className="bg-gray-50 border rounded p-4 text-gray-800 whitespace-pre-wrap">
                 {extractSummaryFromFeedback(feedback)}
               </div>
             )}
-            
+
             {/* 模範解答タブ */}
             {tab === "model" && prompt?.model_answer && (
               <div className="bg-yellow-50 border-yellow-200 border rounded p-4 text-gray-800 whitespace-pre-wrap">
