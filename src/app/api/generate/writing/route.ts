@@ -28,7 +28,7 @@ async function getAllExistingTopics() {
 }
 
 // 指定されたレベルからランダムなトピックをDBから取得する関数
-export async function getRandomTopic(level?: string) {
+async function getRandomTopic(level?: string) {
   try {
     let query = supabase
       .from("daily_writing")
