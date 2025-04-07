@@ -94,11 +94,13 @@ export async function POST(req: NextRequest) {
       }
     );
   } catch (error) {
-    return new Response(JSON.stringify({ error: "添削に失敗しました。" }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    if (error instanceof Error) {
+      return new Response(JSON.stringify({ error: "添削に失敗しました。" }), {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
   }
 }

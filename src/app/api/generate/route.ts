@@ -9,7 +9,7 @@ const openai = getOpenAIClient();
 // JSONオブジェクト抽出のヘルパー関数
 const extractJSONObjects = (responseText: string) => {
   if (responseText.indexOf("[") !== 0) return [];
-  
+
   let bracketCount = 0;
   let objectStart = -1;
   let inString = false;
@@ -58,8 +58,10 @@ const extractJSONObjects = (responseText: string) => {
           objects.push(obj);
           objectStart = -1; // 次のオブジェクト検索のためにリセット
         } catch (e) {
-          // 解析エラーは無視して次へ
-          objectStart = -1;
+          if (e instanceof SyntaxError) {
+            // 解析エラーは無視して次へ
+            objectStart = -1;
+          }
         }
       }
     }
@@ -170,20 +172,27 @@ export async function GET(req: NextRequest) {
                   length,
                 });
 
-                const additionalResponse = await openai.chat.completions.create({
-                  model: "gpt-3.5-turbo",
-                  messages: [{ role: "user", content: additionalPrompt }],
-                });
+                const additionalResponse = await openai.chat.completions.create(
+                  {
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "user", content: additionalPrompt }],
+                  }
+                );
 
                 const additionalContent =
                   additionalResponse.choices[0].message?.content ?? "";
 
                 try {
                   // 追加の問題を解析
-                  const additionalQuestions = JSON.parse(additionalContent.trim());
+                  const additionalQuestions = JSON.parse(
+                    additionalContent.trim()
+                  );
 
                   // 元の問題と追加の問題を結合
-                  const combinedResult = [...finalResult, ...additionalQuestions];
+                  const combinedResult = [
+                    ...finalResult,
+                    ...additionalQuestions,
+                  ];
 
                   // 最終的に結合した問題セットを送信
                   controller.enqueue(

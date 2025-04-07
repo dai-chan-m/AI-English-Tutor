@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 export interface SupabaseQueryOptions {
   column?: string;
   value?: unknown;
-  filter?: Record<string, any>;
+  filter?: Record<string, unknown>;
   orderBy?: string;
   orderDirection?: "asc" | "desc";
   limit?: number;
