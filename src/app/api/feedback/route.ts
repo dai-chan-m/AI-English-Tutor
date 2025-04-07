@@ -1,36 +1,27 @@
 // src/app/api/feedback/route.ts
-import { OpenAI } from "openai";
 import { NextRequest } from "next/server";
+import { getOpenAIClient } from "@/utils/openaiClient";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = getOpenAIClient();
 
-export async function POST(req: NextRequest) {
-  const { text, tone } = await req.json();
-  let toneInstruction = "";
+// トーン指示文を返す関数
+function getToneInstruction(tone: string): string {
+  const toneMap: Record<string, string> = {
+    gentle: "中学生にもわかるように、やさしく丁寧に説明してください。",
+    strict:
+      "あなたは高校の英語教師です。正確さを重視し、論理的かつ簡潔に指摘してください。",
+    friendly:
+      "友達にアドバイスするような、やさしくカジュアルな口調で説明してください。いいところを褒めまくってください。",
+    business:
+      "フォーマルで丁寧な言葉を使い、社会人向けに明確なフィードバックをしてください。",
+  };
 
-  switch (tone) {
-    case "gentle":
-      toneInstruction =
-        "中学生にもわかるように、やさしく丁寧に説明してください。";
-      break;
-    case "strict":
-      toneInstruction =
-        "あなたは高校の英語教師です。正確さを重視し、論理的かつ簡潔に指摘してください。";
-      break;
-    case "friendly":
-      toneInstruction =
-        "友達にアドバイスするような、やさしくカジュアルな口調で説明してください。いいところを褒めまくってください。";
-      break;
-    case "business":
-      toneInstruction =
-        "フォーマルで丁寧な言葉を使い、社会人向けに明確なフィードバックをしてください。";
-      break;
-  }
+  return toneMap[tone] || toneMap["gentle"];
+}
 
-  const prompt = `
-
+// フィードバックプロンプトを生成する関数
+function generateFeedbackPrompt(text: string, toneInstruction: string): string {
+  return `
 以下の英作文について、文を一文ずつ取り出し、次の形式で添削・フィードバックしてください。
 
 出力形式（繰り返してください）：
@@ -60,17 +51,24 @@ ${text}
 - 文を分割して一文ずつ添削してください（文が長い場合も適切に分けて）
 - 全体ではなく、各文ごとに丁寧に修正＆コメントしてください
 - 丁寧でやさしい日本語で書いてください（中学生が読む前提）
-
 `;
+}
 
+export async function POST(req: NextRequest) {
   try {
-    const encoder = new TextEncoder();
+    // リクエストボディから情報を取得
+    const { text, tone } = await req.json();
+    const toneInstruction = getToneInstruction(tone);
+    const prompt = generateFeedbackPrompt(text, toneInstruction);
+
+    // OpenAIにストリーミングリクエスト
     const stream = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       stream: true,
     });
 
+    const encoder = new TextEncoder();
     return new Response(
       new ReadableStream({
         async start(controller) {
@@ -96,13 +94,11 @@ ${text}
       }
     );
   } catch (error) {
-    if (error) {
-      return new Response(JSON.stringify({ error: "添削に失敗しました。" }), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    }
+    return new Response(JSON.stringify({ error: "添削に失敗しました。" }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 }

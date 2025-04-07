@@ -1,109 +1,51 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
-import { useEffect, useState } from "react";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import QuestionViewer from "@/components/QuestionViewer";
 import { VOCAB_MODE } from "@/constants/app";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { getLevelDisplay } from "@/constants/levels";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+interface QuestionItem {
+  question: string;
+  choices: string[];
+  answer: string;
+  explanation_ja: string;
+  Japanese?: string;
+}
 
-// レベルマッピング
-const levelMapping: Record<string, { eiken: string; toeic: string }> = {
-  "CEFR preA1": { eiken: "英検5級", toeic: "TOEIC 300以下" },
-  "CEFR A1": { eiken: "英検4級", toeic: "TOEIC 300-400" },
-  "CEFR A1–A2": { eiken: "英検3級", toeic: "TOEIC 400-500" },
-  "CEFR A2–B1": { eiken: "英検準2級", toeic: "TOEIC 500-600" },
-  "CEFR B1〜B2": { eiken: "英検2級", toeic: "TOEIC 600-700" },
-  "CEFR B2〜C1": { eiken: "英検準1級", toeic: "TOEIC 700-800" },
-  "CEFR C2": { eiken: "英検1級", toeic: "TOEIC 900+" },
-  "TOEIC400 CEFR A2": { eiken: "英検4-3級程度", toeic: "TOEIC 400" },
-  "TOEIC500 CEFR A2+": { eiken: "英検3級程度", toeic: "TOEIC 500" },
-  "TOEIC600 CEFR B1": { eiken: "英検準2級程度", toeic: "TOEIC 600" },
-  "TOEIC700 CEFR B1+": { eiken: "英検2級程度", toeic: "TOEIC 700" },
-  "TOEIC800 CEFR B2+": { eiken: "英検準1級程度", toeic: "TOEIC 800" },
-  "TOEIC900 CEFR C1": { eiken: "英検1級程度", toeic: "TOEIC 900+" },
-};
-
-// CEFRレベルを英検/TOEICに変換する関数
-const getLevelDisplay = (level: string): string => {
-  if (!level) return "不明";
-
-  // マッピングが存在する場合
-  if (levelMapping[level]) {
-    const mapping = levelMapping[level];
-    return `${mapping.eiken} / ${mapping.toeic}`;
-  }
-
-  // 存在しないレベルの場合、そのまま表示
-  return level;
-};
+interface DailyQuestion {
+  page_number: number;
+  level: string;
+  questions: QuestionItem[];
+}
 
 export default function DailyPage() {
   const params = useParams();
   const page_number = (params?.page_number as string) || "1";
-  type DailyQuestion = {
-    page_number: number;
-    level: string;
-    questions: {
-      question: string;
-      choices: string[];
-      answer: string;
-      explanation_ja: string;
-      Japanese?: string;
-    }[];
-  };
+  const pageNumber = parseInt(page_number, 10);
 
-  const [data, setData] = useState<DailyQuestion | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const pageNumber = parseInt(page_number, 10);
-        if (isNaN(pageNumber)) {
-          setError(true);
-          setLoading(false);
-          return;
-        }
-
-        const { data: questionData, error: fetchError } = await supabase
-          .from("daily_questions")
-          .select("*")
-          .eq("page_number", pageNumber)
-          .maybeSingle();
-
-        if (fetchError || !questionData) {
-          setError(true);
-        } else {
-          setData(questionData);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
+  const { data, loading, error } = useSupabaseData<DailyQuestion>(
+    "daily_questions",
+    {
+      column: "page_number",
+      value: isNaN(pageNumber) ? 0 : pageNumber,
     }
+  );
 
-    fetchData();
-  }, [page_number]);
-
-  if (loading)
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10 flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+      <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10">
+        <LoadingSpinner message="問題を読み込み中..." />
       </div>
     );
+  }
 
-  if (error) {
+  if (error || !data) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10 print:bg-white print:shadow-none">
         <ServiceLogo />
@@ -141,7 +83,7 @@ export default function DailyPage() {
 
   // Format questions for QuestionViewer
   const questions =
-    data?.questions?.map((q) => ({
+    data.questions?.map((q) => ({
       questionCount: String(Math.floor(Math.random() * 1000)), // QuestionViewer requires this prop
       question: q.question,
       choices: q.choices,
@@ -151,7 +93,7 @@ export default function DailyPage() {
     })) || [];
 
   // レベル表示を変換
-  const displayLevel = data?.level ? getLevelDisplay(data.level) : "不明";
+  const displayLevel = data.level ? getLevelDisplay(data.level) : "不明";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10 print:bg-white print:shadow-none print:border-none print:rounded-none">
@@ -168,7 +110,7 @@ export default function DailyPage() {
         </p>
         <div className="text-center mt-4">
           <Link
-            href={`/daily/${parseInt(page_number, 10) + 1}`}
+            href={`/daily/${pageNumber + 1}`}
             className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition mr-4"
           >
             次のページへ進む
