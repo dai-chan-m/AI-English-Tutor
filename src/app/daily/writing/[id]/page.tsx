@@ -308,7 +308,7 @@ export default function DailyWritingDetailPage() {
               }
             }}
             placeholder="ここに英作文を入力してください..."
-            className="w-full border border-gray-300 rounded-lg p-4 min-h-32"
+            className="w-full border border-gray-300 text-gray-700 rounded-lg p-4 min-h-32"
             rows={10}
           />
 
