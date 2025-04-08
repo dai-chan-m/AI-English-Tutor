@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
@@ -26,7 +25,7 @@ export default function SignUpPage() {
           無料で始めて、英語学習を加速させよう！
         </p>
 
-        <AuthForm 
+        <AuthForm
           type="signup"
           title="新規登録"
           buttonText="登録する"
@@ -39,7 +38,7 @@ export default function SignUpPage() {
             ログイン
           </Link>
         </div>
-        
+
         <Footer />
       </div>
     </div>
