@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile } from "fs/promises";
 import path from "path";
 import { tmpdir } from "os";
+import { handleAPIError } from "@/utils/apiErrorHandler";
 
 // Visionライブラリ読み込み
 import vision from "@google-cloud/vision";
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ text });
   } catch (error) {
-    console.error("OCR API Error:", error);
-    return NextResponse.json({ error: "OCRに失敗しました" }, { status: 500 });
+    // 共通のエラーハンドリングを使用
+    return handleAPIError(error, "OCRに失敗しました");
   }
 }

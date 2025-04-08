@@ -1,6 +1,7 @@
 // src/app/api/feedback/route.ts
 import { NextRequest } from "next/server";
 import { getOpenAIClient } from "@/utils/openaiClient";
+import { createStreamResponse, handleAPIError } from "@/utils/apiErrorHandler";
 
 const openai = getOpenAIClient();
 
@@ -69,38 +70,23 @@ export async function POST(req: NextRequest) {
     });
 
     const encoder = new TextEncoder();
-    return new Response(
-      new ReadableStream({
-        async start(controller) {
-          let accumulatedText = "";
-          for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || "";
-            accumulatedText += content;
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ feedback: accumulatedText })}\n\n`
-              )
-            );
-          }
-          controller.close();
-        },
-      }),
-      {
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
+    
+    // 共通のストリームレスポンスユーティリティを使用
+    return createStreamResponse(async (controller) => {
+      let accumulatedText = "";
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        accumulatedText += content;
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ feedback: accumulatedText })}\n\n`
+          )
+        );
       }
-    );
+      controller.close();
+    });
   } catch (error) {
-    if (error instanceof Error) {
-      return new Response(JSON.stringify({ error: "添削に失敗しました。" }), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    }
+    // 共通のエラーハンドリングを使用
+    return handleAPIError(error, "添削に失敗しました。");
   }
 }

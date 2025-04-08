@@ -1,10 +1,5 @@
 // lib/saveDailyQuestion.ts
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseServer, getNextId } from "@/utils/supabaseServer";
 
 type SaveParams = {
   level: string;
@@ -21,21 +16,11 @@ type SaveParams = {
 
 export async function saveDailyQuestionSet(params: SaveParams) {
   const { level, mode, source_words, questions } = params;
-  // 最新の page_number を取得して +1
-  const { data, error: selectError } = await supabase
-    .from("daily_questions")
-    .select("page_number")
-    .order("page_number", { ascending: false })
-    .limit(1);
+  
+  // 共通ユーティリティを使用して次のページ番号を取得
+  const nextPageNumber = await getNextId("daily_questions", "page_number");
 
-  if (selectError) {
-    console.error("Failed to fetch latest page_number:", selectError);
-    throw new Error("Could not determine next page number");
-  }
-
-  const nextPageNumber = (data?.[0]?.page_number ?? 0) + 1;
-
-  const { error } = await supabase.from("daily_questions").insert({
+  const { error } = await supabaseServer().from("daily_questions").insert({
     page_number: nextPageNumber,
     level,
     mode,

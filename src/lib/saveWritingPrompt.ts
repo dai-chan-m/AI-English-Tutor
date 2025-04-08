@@ -1,10 +1,5 @@
 // lib/saveWritingPrompt.ts
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseServer, getNextId } from "@/utils/supabaseServer";
 
 type SaveWritingPromptParams = {
   level: string;
@@ -16,21 +11,10 @@ type SaveWritingPromptParams = {
 export async function saveWritingPrompt(params: SaveWritingPromptParams) {
   const { level, topic, model_answer, japanese_explanation } = params;
   
-  // 最新の id を取得して +1
-  const { data, error: selectError } = await supabase
-    .from("daily_writing")
-    .select("id")
-    .order("id", { ascending: false })
-    .limit(1);
+  // 共通ユーティリティを使用して次のIDを取得
+  const nextId = await getNextId("daily_writing", "id");
 
-  if (selectError) {
-    console.error("Failed to fetch latest id:", selectError);
-    throw new Error("Could not determine next id");
-  }
-
-  const nextId = (data?.[0]?.id ?? 0) + 1;
-
-  const { error } = await supabase.from("daily_writing").insert({
+  const { error } = await supabaseServer().from("daily_writing").insert({
     id: nextId,
     level,
     topic,

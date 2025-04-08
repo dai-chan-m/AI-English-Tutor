@@ -23,12 +23,29 @@ export function useSupabaseData<T = unknown>(
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-        );
+        // 環境変数の検証
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        if (!supabaseUrl || !supabaseKey) {
+          throw new Error("Supabase環境変数が設定されていません");
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
 
         let query = supabase.from(table).select(options.select || "*");
+
+        // クエリパラメータのデバッグログ
+        console.log(`Fetching from table: ${table}`);
+        console.log("Query options:", JSON.stringify({
+          column: options.column,
+          value: options.value,
+          filter: options.filter,
+          orderBy: options.orderBy,
+          orderDirection: options.orderDirection,
+          limit: options.limit,
+          range: options.range
+        }, null, 2));
 
         // 単一のフィルタ条件
         if (options.column && options.value !== undefined) {
@@ -63,6 +80,12 @@ export function useSupabaseData<T = unknown>(
 
         if (supabaseError) {
           throw new Error(supabaseError.message);
+        }
+
+        if (!result || (Array.isArray(result) && result.length === 0)) {
+          console.log(`No data found for table: ${table} with the provided options`);
+        } else {
+          console.log(`Data fetched successfully from ${table}`);
         }
 
         setData(result as T);

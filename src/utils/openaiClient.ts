@@ -50,6 +50,8 @@ export async function streamOpenAIResponse(response: Response) {
   });
 }
 
+// 注意: このメソッドは後方互換性のために残しています
+// 新しいコードでは @/utils/apiErrorHandler からインポートしてください
 export function handleAPIError(error: unknown) {
   console.error("API error:", error);
   return NextResponse.json(
