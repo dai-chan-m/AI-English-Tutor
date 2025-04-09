@@ -75,77 +75,157 @@ export default function Home() {
         length,
       };
 
-      // URLSearchParamsを使用してクエリパラメータを作成
-      const params = new URLSearchParams();
+      // 問題生成用のベースパラメータを作成
+      const baseParams = new URLSearchParams();
       Object.entries(formData).forEach(([key, value]) => {
         if (Array.isArray(value)) {
-          params.append(key, JSON.stringify(value));
+          baseParams.append(key, JSON.stringify(value));
         } else {
-          params.append(key, String(value));
+          baseParams.append(key, String(value));
         }
       });
-
-      // EventSourceを使用してSSEを処理
-      const url = `/api/generate?${params.toString()}`;
-      const eventSource = new EventSource(url);
-
-      // メッセージ受信ハンドラ
-      eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-
-        // 完了数を更新（進捗表示用）
-        if (data.completedCount) {
-          setCompletedCount(data.completedCount);
-        }
-
-        // 個々の問題を受け取った場合
-        if (data.singleQuestion) {
-          // コンソールに表示して確認
-
-          setResult((prevQuestions) => {
-            // 新しい問題を追加または置換
-            const newQuestions = [...prevQuestions];
-            if (data.questionIndex !== undefined) {
-              // インデックスが範囲内なら更新、それ以外は追加
-              if (data.questionIndex < newQuestions.length) {
-                newQuestions[data.questionIndex] = data.singleQuestion;
-              } else {
-                // インデックスが範囲外なら、その位置まで埋めて追加
-                while (newQuestions.length < data.questionIndex) {
-                  newQuestions.push(null); // プレースホルダーを追加
-                }
-                newQuestions.push(data.singleQuestion);
-              }
-            } else {
-              // インデックスがなければ末尾に追加
-              newQuestions.push(data.singleQuestion);
+      
+      // 生成済みの問題を保持する配列
+      let generatedQuestions: any[] = [];
+      // 現在のバッチインデックス
+      let currentBatchIndex = 0;
+      // 総バッチ数（初期値は未定）
+      let totalBatches = 0;
+      // 最後のバッチかどうか
+      let isLastBatch = false;
+      
+      // 最初のバッチの生成を開始
+      await fetchNextBatch();
+      
+      // 次のバッチを取得する関数
+      async function fetchNextBatch() {
+        try {
+          // 現在のバッチのパラメータを作成
+          const batchParams = new URLSearchParams(baseParams);
+          batchParams.append('batchIndex', currentBatchIndex.toString());
+          if (totalBatches > 0) {
+            batchParams.append('totalBatches', totalBatches.toString());
+          }
+          if (generatedQuestions.length > 0) {
+            batchParams.append('existingQuestions', JSON.stringify(generatedQuestions));
+          }
+          
+          // EventSourceを使用してSSEを処理
+          const url = `/api/generate?${batchParams.toString()}`;
+          const eventSource = new EventSource(url);
+          
+          // バッチごとの問題リスト
+          let batchQuestions: any[] = [];
+          
+          // メッセージ受信ハンドラ
+          eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            // 完了数を更新（進捗表示用）
+            if (data.completedCount) {
+              setCompletedCount(data.completedCount);
             }
-            return newQuestions;
-          });
+            
+            // 個々の問題を受け取った場合
+            if (data.singleQuestion) {
+              // バッチの問題リストに追加
+              batchQuestions[data.batchProgress - 1] = data.singleQuestion;
+              
+              // 全体のリストにも追加
+              setResult((prevQuestions) => {
+                const newQuestions = [...prevQuestions];
+                if (data.questionIndex !== undefined) {
+                  // インデックスが範囲内なら更新、それ以外は追加
+                  if (data.questionIndex < newQuestions.length) {
+                    newQuestions[data.questionIndex] = data.singleQuestion;
+                  } else {
+                    // インデックスが範囲外なら、その位置まで埋めて追加
+                    while (newQuestions.length < data.questionIndex) {
+                      newQuestions.push(null); // プレースホルダーを追加
+                    }
+                    newQuestions.push(data.singleQuestion);
+                  }
+                } else {
+                  // インデックスがなければ末尾に追加
+                  newQuestions.push(data.singleQuestion);
+                }
+                return newQuestions;
+              });
+            }
+            
+            // バッチ完了通知を受け取った場合
+            if (data.batchComplete) {
+              console.log(`Batch ${data.batchIndex + 1} completed`);
+              
+              // 総バッチ数を更新
+              if (totalBatches === 0) {
+                totalBatches = data.totalBatches;
+              }
+              
+              // 最後のバッチかどうかを更新
+              isLastBatch = data.isLastBatch;
+              
+              // バッチ問題を生成済み問題に追加
+              if (data.batchQuestions && Array.isArray(data.batchQuestions)) {
+                generatedQuestions = [...generatedQuestions, ...data.batchQuestions];
+              }
+              
+              // 次のバッチインデックスを更新
+              if (data.nextBatchIndex !== undefined) {
+                currentBatchIndex = data.nextBatchIndex;
+              }
+            }
+            
+            // 全ての問題を一度に受け取った場合（最終バッチ）
+            if (data.questions && Array.isArray(data.questions)) {
+              setResult(data.questions);
+            }
+            
+            // このバッチのSSEが完了したとき
+            if (data.batchComplete || data.isComplete || data.error) {
+              eventSource.close();
+              
+              // エラーがあれば表示
+              if (data.error) {
+                console.error("Batch error:", data.error);
+                setLoading(false);
+                return;
+              }
+              
+              // 最後のバッチなら完了
+              if (isLastBatch || data.isComplete) {
+                setLoading(false);
+                return;
+              }
+              
+              // 次のバッチを取得
+              fetchNextBatch();
+            }
+          };
+          
+          // エラーハンドラ
+          eventSource.onerror = (error) => {
+            console.error("EventSource error:", error);
+            eventSource.close();
+            
+            // 最後のバッチでなければ次のバッチを試行
+            if (!isLastBatch && currentBatchIndex < totalBatches) {
+              fetchNextBatch();
+            } else {
+              setLoading(false);
+            }
+          };
+        } catch (error) {
+          console.error("Batch fetch error:", error);
+          
+          // 最後のバッチでなければ次のバッチを試行
+          if (!isLastBatch && currentBatchIndex < totalBatches) {
+            fetchNextBatch();
+          } else {
+            setLoading(false);
+          }
         }
-
-        // 全ての問題を一度に受け取った場合（フォールバック）
-        else if (data.questions && Array.isArray(data.questions)) {
-          setResult(data.questions);
-        }
-
-        // 完全に終了したらクリーンアップ
-        if (data.isComplete) {
-          setLoading(false);
-          eventSource.close();
-        }
-      };
-
-      // エラーハンドラ
-      eventSource.onerror = (error) => {
-        console.error("EventSource error:", error);
-        setLoading(false);
-        eventSource.close();
-      };
-
-      return () => {
-        eventSource.close();
-      };
+      }
     } catch (error) {
       console.error("Error:", error);
       setLoading(false);
