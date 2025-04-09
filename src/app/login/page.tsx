@@ -24,9 +24,8 @@ export default function LoginPage() {
           登録したメールアドレスとパスワードでログインしてください。
         </p>
 
-        <AuthForm 
+        <AuthForm
           type="login"
-          title="ログイン"
           buttonText="ログインする"
           onSuccess={handleSuccess}
         />
@@ -49,7 +48,7 @@ export default function LoginPage() {
             トップページに戻る
           </Link>
         </div>
-        
+
         <Footer />
       </div>
     </div>

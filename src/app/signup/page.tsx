@@ -27,7 +27,6 @@ export default function SignUpPage() {
 
         <AuthForm
           type="signup"
-          title="新規登録"
           buttonText="登録する"
           onSuccess={handleSuccess}
         />

@@ -5,17 +5,15 @@ import React, { useState, FormEvent } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 type AuthFormProps = {
-  type: 'login' | 'signup';
-  title: string;
+  type: "login" | "signup";
   buttonText: string;
   onSuccess?: () => void;
 };
 
 export default function AuthForm({
   type,
-  title,
   buttonText,
-  onSuccess
+  onSuccess,
 }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +32,7 @@ export default function AuthForm({
     try {
       let authResult;
 
-      if (type === 'login') {
+      if (type === "login") {
         authResult = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -54,11 +52,11 @@ export default function AuthForm({
       } else {
         setSuccess(true);
         setMessage(
-          type === 'signup'
+          type === "signup"
             ? "登録確認メールを送信しました。メールのリンクをクリックして登録を完了してください。"
             : "ログインに成功しました！"
         );
-        
+
         if (onSuccess) {
           onSuccess();
         }
@@ -74,8 +72,6 @@ export default function AuthForm({
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white p-8 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">{title}</h2>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-gray-700 mb-1">
@@ -86,7 +82,7 @@ export default function AuthForm({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
               required
             />
           </div>
@@ -100,7 +96,7 @@ export default function AuthForm({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
               required
             />
           </div>
@@ -108,7 +104,9 @@ export default function AuthForm({
           {message && (
             <div
               className={`p-3 rounded-md ${
-                success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                success
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
               }`}
             >
               {message}
