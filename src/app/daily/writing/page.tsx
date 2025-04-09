@@ -121,6 +121,9 @@ export default function DailyWritingPage() {
                 <div className="text-gray-700 mb-2 line-clamp-2">
                   {item.topic}
                 </div>
+                <div className="text-gray-700 mb-2 line-clamp-2">
+                  {item.japanese_explanation}
+                </div>
                 <div className="text-sm text-gray-600">
                   レベル: {getLevelDisplay(item.level)}
                 </div>
