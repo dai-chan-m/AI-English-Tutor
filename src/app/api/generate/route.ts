@@ -193,22 +193,36 @@ export async function GET(req: NextRequest) {
                 ...additionalQuestions,
               ];
 
-              // 最終的に結合した問題セットを送信
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({
-                    questions: combinedResult,
-                    isComplete: true,
-                  })}\n\n`
-                )
-              );
+              // 問題数が充足しているか確認
+              if (combinedResult.length >= requestedQuestionCount) {
+                // 最終的に結合した問題セットを送信
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({
+                      questions: combinedResult,
+                      isComplete: true,
+                    })}\n\n`
+                  )
+                );
+              } else {
+                // 再度試行しても不足している場合はエラーメッセージを表示
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({
+                      error: "問題の生成が不完全です。ページを更新して再度お試しください。",
+                      questions: combinedResult,
+                      isComplete: true,
+                    })}\n\n`
+                  )
+                );
+              }
             } catch (e) {
               console.error("Failed to parse additional questions:", e);
-              // 追加生成に失敗した場合は元の問題だけを返す
+              // 追加生成に失敗した場合は再試行を促すメッセージを返す
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({
-                    questions: finalResult,
+                    error: "問題の生成に失敗しました。ページを更新して再度お試しください。",
                     isComplete: true,
                   })}\n\n`
                 )
