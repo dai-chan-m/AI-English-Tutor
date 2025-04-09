@@ -4,6 +4,8 @@ type GeneratePromptParams = {
   questionCount?: string;
   level: string;
   length: string;
+  batchIndex?: number;
+  totalBatches?: number;
 };
 
 export function generatePrompt({
@@ -12,6 +14,8 @@ export function generatePrompt({
   questionCount,
   level,
   length,
+  batchIndex = 0,
+  totalBatches = 1,
 }: GeneratePromptParams): string {
   if (mode === "word" && words && words.length > 0) {
     return `Create multiple-choice English fill-in-the-blank questions based on the following conditions.
@@ -25,6 +29,7 @@ export function generatePrompt({
     - Exactly four choices (A to D), one of which is the correct answer
   - The words provided are: ${words.join(", ")} 
     - The correct answer must match the words provided (no inflections or conjugations)
+  - This is batch ${batchIndex + 1} of ${totalBatches}. Make sure your questions are unique compared to other batches.
     
   ---
   
@@ -115,6 +120,9 @@ export function generatePrompt({
     - One sentence with a single blank (use "____")
     - Exactly four choices (A to D), one of which is the correct answer
     - The correct answer must match the intended vocabulary target (no inflections or conjugations)
+  - This is batch ${batchIndex + 1} of ${totalBatches}. Make sure your questions are unique compared to other batches.
+    - For this batch, select different vocabulary than previous batches.
+    - Batch ${batchIndex + 1} should focus on different topics than previous batches to ensure variety.
   
   ---
   

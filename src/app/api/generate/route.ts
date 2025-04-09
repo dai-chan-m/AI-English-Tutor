@@ -80,6 +80,10 @@ export async function GET(req: NextRequest) {
     const level = searchParams.get("level") || "CEFR preA1";
     const length = searchParams.get("length") || "11 to 15 words";
 
+    // 最初のバッチを指定（クエリパラメータになければ0）
+    const batchIndex = parseInt(searchParams.get("batchIndex") || "0", 10);
+    const totalBatchesParam = searchParams.get("totalBatches");
+
     // words配列を処理
     let words: string[] = [];
     const wordsParam = searchParams.get("words");
@@ -92,51 +96,92 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // すでに生成された問題があれば取得
+    let existingQuestions: string[] = [];
+    const existingQuestionsParam = searchParams.get("existingQuestions");
+    if (existingQuestionsParam) {
+      try {
+        existingQuestions = JSON.parse(existingQuestionsParam);
+      } catch (e) {
+        console.error("Failed to parse existingQuestions parameter:", e);
+      }
+    }
+
+    const encoder = new TextEncoder();
+    // リクエストされた問題数を数値変換
+    const requestedQuestionCount =
+      mode === "word" ? words.length : parseInt(questionCount, 10);
+
+    // 5問ずつ生成するためのバッチサイズ
+    const BATCH_SIZE = 5;
+
+    // 総バッチ数を計算
+    const totalBatches = totalBatchesParam
+      ? parseInt(totalBatchesParam, 10)
+      : Math.ceil(requestedQuestionCount / BATCH_SIZE);
+
+    // このバッチのスタート位置とサイズを計算
+    const startIndex = batchIndex * BATCH_SIZE;
+    const currentBatchSize = Math.min(
+      BATCH_SIZE,
+      requestedQuestionCount - startIndex
+    );
+
+    // 最終バッチかどうかを判定
+    const isLastBatch = batchIndex === totalBatches - 1;
+
+    // このバッチのプロンプトを生成
     const prompt = generatePrompt({
       mode,
-      words,
-      questionCount,
+      words:
+        mode === "word"
+          ? words.slice(startIndex, startIndex + currentBatchSize)
+          : [],
+      questionCount: currentBatchSize.toString(),
       level,
       length,
+      batchIndex,
+      totalBatches,
     });
 
+    // このバッチの問題を生成
     const stream = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       stream: true,
     });
 
-    const encoder = new TextEncoder();
-    let fullResponse = "";
-
-    // 問題追跡用のクロージャ
+    let batchResponse = "";
     let lastSentCount = 0;
-    // リクエストされた問題数を数値変換
-    const requestedQuestionCount =
-      mode === "word" ? words.length : parseInt(questionCount, 10);
 
     return createStreamResponse(async (controller) => {
+      // ストリームからのレスポンスを処理
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || "";
-        fullResponse += content;
+        batchResponse += content;
 
         try {
-          // 現在の全応答からオブジェクトを抽出
-          const responseText = fullResponse.trim();
+          // 現在のバッチレスポンスからオブジェクトを抽出
+          const responseText = batchResponse.trim();
           const objects = extractJSONObjects(responseText);
 
-          // 既に送信したオブジェクト数を超えた場合、新しいオブジェクトを送信
+          // 新しいオブジェクトがあれば送信
           if (objects.length > lastSentCount) {
             for (let j = lastSentCount; j < objects.length; j++) {
+              const globalIndex = startIndex + j;
               // 単一の問題を送信
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({
                     singleQuestion: objects[j],
-                    questionIndex: j,
-                    completedCount: j + 1,
+                    questionIndex: globalIndex,
+                    completedCount: existingQuestions.length + j + 1,
                     isComplete: false,
-                    debug: true, // デバッグ情報
+                    totalExpected: requestedQuestionCount,
+                    currentBatch: batchIndex + 1,
+                    totalBatches: totalBatches,
+                    batchProgress: j + 1,
+                    batchSize: currentBatchSize,
                   })}\n\n`
                 )
               );
@@ -148,143 +193,89 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // ストリーム終了時に完全な結果を送信
+      // このバッチの結果をパース
       try {
-        const finalResult = JSON.parse(fullResponse.trim());
+        const batchQuestions = JSON.parse(batchResponse.trim());
+        // 既存の問題と合わせた問題リスト
+        const allQuestions = [...existingQuestions, ...batchQuestions];
 
-        // 問題数のチェックと対応
-        if (finalResult.length < requestedQuestionCount) {
-          console.log(
-            `Warning: Received ${finalResult.length} questions but requested ${requestedQuestionCount}`
-          );
+        console.log(
+          `Batch ${batchIndex + 1}/${totalBatches} completed: ${
+            batchQuestions.length
+          } questions`
+        );
 
-          // 不足している問題数を計算
-          const missingCount = requestedQuestionCount - finalResult.length;
+        // バッチの状態を送信
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              batchComplete: true,
+              batchIndex: batchIndex,
+              batchQuestions: batchQuestions,
+              nextBatchIndex: batchIndex + 1,
+              isLastBatch: isLastBatch,
+              totalGenerated: allQuestions.length,
+              totalRequested: requestedQuestionCount,
+              totalBatches: totalBatches,
+            })}\n\n`
+          )
+        );
 
-          // 問題数が不足している場合、足りない分を追加生成
-          if (missingCount > 0) {
-            const additionalPrompt = generatePrompt({
-              mode,
-              words: mode === "word" ? words.slice(finalResult.length) : [],
-              questionCount: missingCount.toString(),
-              level,
-              length,
-            });
-
-            const additionalResponse = await openai.chat.completions.create(
-              {
-                model: "gpt-3.5-turbo",
-                messages: [{ role: "user", content: additionalPrompt }],
-              }
-            );
-
-            const additionalContent =
-              additionalResponse.choices[0].message?.content ?? "";
-
-            try {
-              // 追加の問題を解析
-              const additionalQuestions = JSON.parse(
-                additionalContent.trim()
-              );
-
-              // 元の問題と追加の問題を結合
-              const combinedResult = [
-                ...finalResult,
-                ...additionalQuestions,
-              ];
-
-              // 問題数が充足しているか確認
-              if (combinedResult.length >= requestedQuestionCount) {
-                // 最終的に結合した問題セットを送信
-                controller.enqueue(
-                  encoder.encode(
-                    `data: ${JSON.stringify({
-                      questions: combinedResult,
-                      isComplete: true,
-                    })}\n\n`
-                  )
-                );
-              } else {
-                // 再度試行しても不足している場合はエラーメッセージを表示
-                controller.enqueue(
-                  encoder.encode(
-                    `data: ${JSON.stringify({
-                      error: "問題の生成が不完全です。ページを更新して再度お試しください。",
-                      questions: combinedResult,
-                      isComplete: true,
-                    })}\n\n`
-                  )
-                );
-              }
-            } catch (e) {
-              console.error("Failed to parse additional questions:", e);
-              // 追加生成に失敗した場合は再試行を促すメッセージを返す
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({
-                    error: "問題の生成に失敗しました。ページを更新して再度お試しください。",
-                    isComplete: true,
-                  })}\n\n`
-                )
-              );
-            }
-          } else {
-            // 問題数が揃っている場合は通常通り返す
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({
-                  questions: finalResult,
-                  isComplete: true,
-                })}\n\n`
-              )
-            );
-          }
-        } else {
-          // 問題数が揃っている場合は通常通り返す
+        // 最終バッチなら最終結果も送信
+        if (isLastBatch) {
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({
-                questions: finalResult,
+                questions: allQuestions,
                 isComplete: true,
+                totalGenerated: allQuestions.length,
+                totalRequested: requestedQuestionCount,
+              })}\n\n`
+            )
+          );
+
+          // データベースへの保存処理（最終バッチのみ）
+          const fixedQuestions =
+            allQuestions.length === 10
+              ? allQuestions
+              : allQuestions.length > 10
+              ? allQuestions.slice(0, 10)
+              : null;
+
+          if (fixedQuestions) {
+            try {
+              await saveDailyQuestionSet({
+                level,
+                mode,
+                source_words: mode === "word" ? words : null,
+                questions: fixedQuestions,
+              });
+              console.log("✅ 保存完了！");
+            } catch (e) {
+              console.error("❌ 保存失敗:", e);
+            }
+          } else {
+            console.log("📭 保存スキップ：10問未満");
+          }
+        }
+      } catch (e) {
+        if (e instanceof SyntaxError) {
+          console.error(
+            `Failed to parse batch ${batchIndex + 1} questions:`,
+            e
+          );
+          // エラーが発生した場合
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                error: "問題の生成に失敗しました。再試行してください。",
+                errorDetail: e.message,
+                rawResponse: batchResponse,
+                batchIndex: batchIndex,
               })}\n\n`
             )
           );
         }
-
-        // データベースへの保存処理
-        const fixedQuestions =
-          finalResult.length === 10
-            ? finalResult
-            : finalResult.length > 10
-            ? finalResult.slice(0, 10)
-            : null;
-
-        if (fixedQuestions) {
-          try {
-            await saveDailyQuestionSet({
-              level,
-              mode,
-              source_words: mode === "word" ? words : null,
-              questions: fixedQuestions,
-            });
-            console.log("✅ 保存完了！");
-          } catch (e) {
-            console.error("❌ 保存失敗:", e);
-          }
-        } else {
-          console.log("📭 保存スキップ：10問未満");
-        }
-      } catch (e) {
-        console.error("Final JSON parsing error:", e);
-        // 最終的なJSON解析に失敗した場合
-        controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({
-              error: "Invalid JSON from GPT",
-              raw: fullResponse,
-            })}\n\n`
-          )
-        );
       }
 
       controller.close();
