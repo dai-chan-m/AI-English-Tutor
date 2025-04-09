@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
     }
 
     // すでに生成された問題があれば取得
-    let existingQuestions: any[] = [];
+    let existingQuestions: string[] = [];
     const existingQuestionsParam = searchParams.get("existingQuestions");
     if (existingQuestionsParam) {
       try {

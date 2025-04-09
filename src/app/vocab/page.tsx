@@ -84,53 +84,56 @@ export default function Home() {
           baseParams.append(key, String(value));
         }
       });
-      
+
       // 生成済みの問題を保持する配列
-      let generatedQuestions: any[] = [];
+      let generatedQuestions: string[] = [];
       // 現在のバッチインデックス
       let currentBatchIndex = 0;
       // 総バッチ数（初期値は未定）
       let totalBatches = 0;
       // 最後のバッチかどうか
       let isLastBatch = false;
-      
+
       // 最初のバッチの生成を開始
       await fetchNextBatch();
-      
+
       // 次のバッチを取得する関数
       async function fetchNextBatch() {
         try {
           // 現在のバッチのパラメータを作成
           const batchParams = new URLSearchParams(baseParams);
-          batchParams.append('batchIndex', currentBatchIndex.toString());
+          batchParams.append("batchIndex", currentBatchIndex.toString());
           if (totalBatches > 0) {
-            batchParams.append('totalBatches', totalBatches.toString());
+            batchParams.append("totalBatches", totalBatches.toString());
           }
           if (generatedQuestions.length > 0) {
-            batchParams.append('existingQuestions', JSON.stringify(generatedQuestions));
+            batchParams.append(
+              "existingQuestions",
+              JSON.stringify(generatedQuestions)
+            );
           }
-          
+
           // EventSourceを使用してSSEを処理
           const url = `/api/generate?${batchParams.toString()}`;
           const eventSource = new EventSource(url);
-          
+
           // バッチごとの問題リスト
-          let batchQuestions: any[] = [];
-          
+          const batchQuestions: string[] = [];
+
           // メッセージ受信ハンドラ
           eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            
+
             // 完了数を更新（進捗表示用）
             if (data.completedCount) {
               setCompletedCount(data.completedCount);
             }
-            
+
             // 個々の問題を受け取った場合
             if (data.singleQuestion) {
               // バッチの問題リストに追加
               batchQuestions[data.batchProgress - 1] = data.singleQuestion;
-              
+
               // 全体のリストにも追加
               setResult((prevQuestions) => {
                 const newQuestions = [...prevQuestions];
@@ -152,62 +155,65 @@ export default function Home() {
                 return newQuestions;
               });
             }
-            
+
             // バッチ完了通知を受け取った場合
             if (data.batchComplete) {
               console.log(`Batch ${data.batchIndex + 1} completed`);
-              
+
               // 総バッチ数を更新
               if (totalBatches === 0) {
                 totalBatches = data.totalBatches;
               }
-              
+
               // 最後のバッチかどうかを更新
               isLastBatch = data.isLastBatch;
-              
+
               // バッチ問題を生成済み問題に追加
               if (data.batchQuestions && Array.isArray(data.batchQuestions)) {
-                generatedQuestions = [...generatedQuestions, ...data.batchQuestions];
+                generatedQuestions = [
+                  ...generatedQuestions,
+                  ...data.batchQuestions,
+                ];
               }
-              
+
               // 次のバッチインデックスを更新
               if (data.nextBatchIndex !== undefined) {
                 currentBatchIndex = data.nextBatchIndex;
               }
             }
-            
+
             // 全ての問題を一度に受け取った場合（最終バッチ）
             if (data.questions && Array.isArray(data.questions)) {
               setResult(data.questions);
             }
-            
+
             // このバッチのSSEが完了したとき
             if (data.batchComplete || data.isComplete || data.error) {
               eventSource.close();
-              
+
               // エラーがあれば表示
               if (data.error) {
                 console.error("Batch error:", data.error);
                 setLoading(false);
                 return;
               }
-              
+
               // 最後のバッチなら完了
               if (isLastBatch || data.isComplete) {
                 setLoading(false);
                 return;
               }
-              
+
               // 次のバッチを取得
               fetchNextBatch();
             }
           };
-          
+
           // エラーハンドラ
           eventSource.onerror = (error) => {
             console.error("EventSource error:", error);
             eventSource.close();
-            
+
             // 最後のバッチでなければ次のバッチを試行
             if (!isLastBatch && currentBatchIndex < totalBatches) {
               fetchNextBatch();
@@ -217,7 +223,7 @@ export default function Home() {
           };
         } catch (error) {
           console.error("Batch fetch error:", error);
-          
+
           // 最後のバッチでなければ次のバッチを試行
           if (!isLastBatch && currentBatchIndex < totalBatches) {
             fetchNextBatch();
