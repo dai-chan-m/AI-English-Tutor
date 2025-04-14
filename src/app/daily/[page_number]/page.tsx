@@ -29,14 +29,13 @@ export default function DailyPage() {
   const page_number = (params?.page_number as string) || "1";
   const pageNumber = parseInt(page_number, 10);
 
-  const { data, loading, error } = useSupabaseData<DailyQuestion | DailyQuestion[]>(
-    "daily_questions",
-    {
-      column: "page_number",
-      value: isNaN(pageNumber) ? 0 : pageNumber,
-    }
-  );
-  
+  const { data, loading, error } = useSupabaseData<
+    DailyQuestion | DailyQuestion[]
+  >("daily_questions", {
+    column: "page_number",
+    value: isNaN(pageNumber) ? 0 : pageNumber,
+  });
+
   // データが配列の場合は最初の項目を使用
   const questionData = Array.isArray(data) ? data[0] : data;
 
@@ -96,7 +95,9 @@ export default function DailyPage() {
     })) || [];
 
   // レベル表示を変換
-  const displayLevel = questionData.level ? getLevelDisplay(questionData.level) : "不明";
+  const displayLevel = questionData.level
+    ? getLevelDisplay(questionData.level)
+    : "不明";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10 print:bg-white print:shadow-none print:border-none print:rounded-none">

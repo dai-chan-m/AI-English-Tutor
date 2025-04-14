@@ -1,104 +1,64 @@
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { 
+  fetchData, 
+  type SupabaseQueryOptions, 
+  type DataState 
+} from "@/utils/supabaseHelpers";
 
-export interface SupabaseQueryOptions {
-  column?: string;
-  value?: unknown;
-  filter?: Record<string, unknown>;
-  orderBy?: string;
-  orderDirection?: "asc" | "desc";
-  limit?: number;
-  range?: [number, number];
-  select?: string;
-}
-
+/**
+ * Supabaseからデータを取得するためのReact Hook
+ */
 export function useSupabaseData<T = unknown>(
   table: string,
   options: SupabaseQueryOptions = {}
-) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+): DataState<T> {
+  const [state, setState] = useState<DataState<T>>({
+    data: null,
+    loading: true,
+    error: null,
+    refetch: () => {},
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 環境変数の検証
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const executeQuery = async () => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
 
-        if (!supabaseUrl || !supabaseKey) {
-          throw new Error("Supabase環境変数が設定されていません");
-        }
+    // オプションのデバッグログ
+    console.log(`Fetching from table: ${table}`);
+    console.log("Query options:", JSON.stringify(options, null, 2));
 
-        const supabase = createClient(supabaseUrl, supabaseKey);
+    try {
+      const result = await fetchData<T>(table, {
+        ...options,
+        isServer: false
+      });
 
-        let query = supabase.from(table).select(options.select || "*");
-
-        // クエリパラメータのデバッグログ
-        console.log(`Fetching from table: ${table}`);
-        console.log("Query options:", JSON.stringify({
-          column: options.column,
-          value: options.value,
-          filter: options.filter,
-          orderBy: options.orderBy,
-          orderDirection: options.orderDirection,
-          limit: options.limit,
-          range: options.range
-        }, null, 2));
-
-        // 単一のフィルタ条件
-        if (options.column && options.value !== undefined) {
-          query = query.eq(options.column, options.value);
-        }
-
-        // 複数のフィルタ条件
-        if (options.filter) {
-          Object.entries(options.filter).forEach(([key, value]) => {
-            query = query.eq(key, value);
-          });
-        }
-
-        // ソート
-        if (options.orderBy) {
-          query = query.order(options.orderBy, {
-            ascending: options.orderDirection !== "desc",
-          });
-        }
-
-        // リミット
-        if (options.limit) {
-          query = query.limit(options.limit);
-        }
-
-        // 範囲
-        if (options.range) {
-          query = query.range(options.range[0], options.range[1]);
-        }
-
-        const { data: result, error: supabaseError } = await query;
-
-        if (supabaseError) {
-          throw new Error(supabaseError.message);
-        }
-
-        if (!result || (Array.isArray(result) && result.length === 0)) {
-          console.log(`No data found for table: ${table} with the provided options`);
-        } else {
-          console.log(`Data fetched successfully from ${table}`);
-        }
-
-        setData(result as T);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching data from Supabase:", err);
-        setError(err instanceof Error ? err : new Error(String(err)));
-        setLoading(false);
+      if (!result.data || (Array.isArray(result.data) && result.data.length === 0)) {
+        console.log(`No data found for table: ${table} with the provided options`);
+      } else {
+        console.log(`Data fetched successfully from ${table}`);
       }
-    };
 
-    fetchData();
+      setState({
+        data: result.data,
+        loading: false,
+        error: result.error instanceof Error ? result.error : null,
+        refetch: executeQuery,
+      });
+    } catch (error) {
+      console.error("Error in useSupabaseData hook:", error);
+      setState({
+        data: null,
+        loading: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+        refetch: executeQuery,
+      });
+    }
+  };
+
+  // 依存配列に options のシリアライズされた値を含める
+  useEffect(() => {
+    executeQuery();
   }, [table, JSON.stringify(options)]);
 
-  return { data, loading, error, refetch: () => setLoading(true) };
+  return state;
 }

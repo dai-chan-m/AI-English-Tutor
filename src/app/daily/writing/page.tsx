@@ -1,16 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
 import { getLevelDisplay } from "@/constants/levels";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { fetchData, type DataState } from "@/utils/supabaseHelpers";
 
 type WritingPrompt = {
   id: number;
@@ -22,33 +17,32 @@ type WritingPrompt = {
 };
 
 export default function DailyWritingPage() {
-  const [writingPrompts, setWritingPrompts] = useState<WritingPrompt[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [state, setState] = useState<DataState<WritingPrompt[]>>({
+    data: null,
+    loading: true,
+    error: null,
+    refetch: () => fetchPrompts(),
+  });
+
+  async function fetchPrompts() {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    const result = await fetchData<WritingPrompt[]>("daily_writing", {
+      orderBy: "id",
+      orderDirection: "desc",
+      isServer: false
+    });
+    
+    setState({
+      data: result.data,
+      loading: false,
+      error: result.error instanceof Error ? result.error : null,
+      refetch: () => fetchPrompts(),
+    });
+  }
 
   useEffect(() => {
-    async function fetchWritingPrompts() {
-      try {
-        const { data, error: fetchError } = await supabase
-          .from("daily_writing")
-          .select("*")
-          .order("id", { ascending: false });
-
-        if (fetchError) {
-          console.error("Error fetching data:", fetchError);
-          setError(true);
-        } else {
-          setWritingPrompts(data || []);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchWritingPrompts();
+    fetchPrompts();
   }, []);
 
   return (
@@ -59,18 +53,18 @@ export default function DailyWritingPage() {
           ✍️ 日替わり英作文
         </h1>
 
-        {loading ? (
+        {state.loading ? (
           <div className="flex justify-center py-20">
             <div className="animate-spin h-8 w-8 border-4 border-green-500 rounded-full border-t-transparent"></div>
           </div>
-        ) : error ? (
+        ) : state.error ? (
           <div className="text-center py-10">
             <p className="text-xl text-gray-700 mb-4">
               データの取得中にエラーが発生しました
             </p>
             <p className="text-gray-500">後ほど再度お試しください</p>
           </div>
-        ) : writingPrompts.length === 0 ? (
+        ) : !state.data || state.data.length === 0 ? (
           <div className="text-center py-10">
             <p className="text-xl text-gray-700 mb-4">
               英作文のお題がまだ登録されていません
@@ -79,7 +73,7 @@ export default function DailyWritingPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {writingPrompts.map((item) => (
+            {state.data.map((item) => (
               <Link
                 key={item.id}
                 href={`/daily/writing/${item.id}`}

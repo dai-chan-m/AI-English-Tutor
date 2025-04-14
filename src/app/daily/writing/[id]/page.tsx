@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
@@ -10,11 +9,7 @@ import { usePathname } from "next/navigation";
 import { OCRDropZone } from "@/components/OCRDropZone";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { getLevelDisplay } from "@/constants/levels";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { fetchData } from "@/utils/supabaseHelpers";
 
 type WritingPrompt = {
   id: number;
@@ -29,7 +24,7 @@ export default function DailyWritingDetailPage() {
   const { checkingAuth, isAuthenticated } = useAuthGuard(false);
   const [prompt, setPrompt] = useState<WritingPrompt | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const [userEssay, setUserEssay] = useState("");
   const [feedback, setFeedback] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
@@ -48,25 +43,26 @@ export default function DailyWritingDetailPage() {
     async function fetchWritingPrompt() {
       if (!id) return;
 
-      try {
-        const { data, error: fetchError } = await supabase
-          .from("daily_writing")
-          .select("*")
-          .eq("id", id)
-          .single();
+      setLoading(true);
+      
+      const result = await fetchData<WritingPrompt>("daily_writing", {
+        column: "id",
+        value: id,
+        isServer: false
+      });
 
-        if (fetchError) {
-          console.error("Error fetching data:", fetchError);
-          setError(true);
-        } else {
-          setPrompt(data);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(true);
-      } finally {
-        setLoading(false);
+      if (result.error) {
+        console.error("Error fetching writing prompt:", result.error);
+        setError(result.error instanceof Error ? result.error : new Error(String(result.error)));
+      } else if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+        setPrompt(result.data[0]);
+      } else if (result.data && !Array.isArray(result.data)) {
+        setPrompt(result.data);
+      } else {
+        setError(new Error("Writing prompt not found"));
       }
+      
+      setLoading(false);
     }
 
     fetchWritingPrompt();

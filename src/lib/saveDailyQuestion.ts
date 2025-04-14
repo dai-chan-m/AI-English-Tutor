@@ -1,5 +1,5 @@
 // lib/saveDailyQuestion.ts
-import { supabaseServer, getNextId } from "@/utils/supabaseServer";
+import { insertWithNextId } from "@/utils/supabaseHelpers";
 
 type SaveParams = {
   level: string;
@@ -17,21 +17,20 @@ type SaveParams = {
 export async function saveDailyQuestionSet(params: SaveParams) {
   const { level, mode, source_words, questions } = params;
   
-  // 共通ユーティリティを使用して次のページ番号を取得
-  const nextPageNumber = await getNextId("daily_questions", "page_number");
+  // 共通ヘルパー関数を使用してデータを挿入
+  const result = await insertWithNextId(
+    "daily_questions",
+    { level, mode, source_words, questions },
+    "page_number"
+  );
 
-  const { error } = await supabaseServer().from("daily_questions").insert({
-    page_number: nextPageNumber,
-    level,
-    mode,
-    source_words,
-    questions,
-  });
-
-  if (error) {
-    console.error("Supabase insert error:", error);
-    throw new Error("Failed to save question set to DB");
+  if (result.error) {
+    console.error("Failed to save question set:", result.error);
+    throw result.error;
   }
 
-  return nextPageNumber; // 必要なら返す（例：リダイレクトに使うとか）
+  // 最初のレコードのpage_numberを返す（テーブルには1つのレコードだけ挿入される）
+  return result.data && Array.isArray(result.data) && result.data.length > 0
+    ? result.data[0].page_number
+    : null;
 }
