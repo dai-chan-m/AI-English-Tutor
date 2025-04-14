@@ -9,6 +9,7 @@ import Spinner from "@/components/Spinner";
 import { usePathname } from "next/navigation";
 import { OCRDropZone } from "@/components/OCRDropZone";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { getLevelDisplay } from "@/constants/levels";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,37 +23,6 @@ type WritingPrompt = {
   model_answer: string;
   japanese_explanation: string;
   created_at: string;
-};
-
-// レベルマッピング
-const levelMapping: Record<string, { eiken: string; toeic: string }> = {
-  "CEFR preA1": { eiken: "英検5級", toeic: "TOEIC 300以下" },
-  "CEFR A1": { eiken: "英検4級", toeic: "TOEIC 300-400" },
-  "CEFR A1–A2": { eiken: "英検3級", toeic: "TOEIC 400-500" },
-  "CEFR A2–B1": { eiken: "英検準2級", toeic: "TOEIC 500-600" },
-  "CEFR B1〜B2": { eiken: "英検2級", toeic: "TOEIC 600-700" },
-  "CEFR B2〜C1": { eiken: "英検準1級", toeic: "TOEIC 700-800" },
-  "CEFR C2": { eiken: "英検1級", toeic: "TOEIC 900+" },
-  "TOEIC400 CEFR A2": { eiken: "英検4-3級程度", toeic: "TOEIC 400" },
-  "TOEIC500 CEFR A2+": { eiken: "英検3級程度", toeic: "TOEIC 500" },
-  "TOEIC600 CEFR B1": { eiken: "英検準2級程度", toeic: "TOEIC 600" },
-  "TOEIC700 CEFR B1+": { eiken: "英検2級程度", toeic: "TOEIC 700" },
-  "TOEIC800 CEFR B2+": { eiken: "英検準1級程度", toeic: "TOEIC 800" },
-  "TOEIC900 CEFR C1": { eiken: "英検1級程度", toeic: "TOEIC 900+" },
-};
-
-// CEFRレベルを英検/TOEICに変換する関数
-const getLevelDisplay = (level: string): string => {
-  if (!level) return "不明";
-
-  // マッピングが存在する場合
-  if (levelMapping[level]) {
-    const mapping = levelMapping[level];
-    return `${mapping.eiken} / ${mapping.toeic}`;
-  }
-
-  // 存在しないレベルの場合、そのまま表示
-  return level;
 };
 
 export default function DailyWritingDetailPage() {

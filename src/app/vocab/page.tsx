@@ -394,10 +394,10 @@ export default function Home() {
                 <>
                   <option value="CEFR preA1">英検5級</option>
                   <option value="CEFR A1">英検4級</option>
-                  <option value="CEFR A1–A2">英検3級</option>
-                  <option value="CEFR A2–B1">英検準2級</option>
-                  <option value="CEFR B1〜B2">英検2級</option>
-                  <option value="CEFR B2〜C1">英検準1級</option>
+                  <option value="CEFR A1-A2">英検3級</option>
+                  <option value="CEFR A2-B1">英検準2級</option>
+                  <option value="CEFR B1-B2">英検2級</option>
+                  <option value="CEFR B2-C1">英検準1級</option>
                   <option value="CEFR C2">英検1級</option>
                 </>
               )}

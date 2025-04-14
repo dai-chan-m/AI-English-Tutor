@@ -16,6 +16,12 @@ export const levelMapping: Record<string, LevelMapping> = {
   "CEFR B1-B2": { eiken: "英検2級", toeic: "TOEIC 650-850" },
   "CEFR B2-C1": { eiken: "英検準1級", toeic: "TOEIC 850-950" },
   "CEFR C1-C2": { eiken: "英検1級", toeic: "TOEIC 950+" },
+  "TOEIC400 CEFR A2": { eiken: "英検4-3級程度", toeic: "TOEIC 400" },
+  "TOEIC500 CEFR A2+": { eiken: "英検3級程度", toeic: "TOEIC 500" },
+  "TOEIC600 CEFR B1": { eiken: "英検準2級程度", toeic: "TOEIC 600" },
+  "TOEIC700 CEFR B1+": { eiken: "英検2級程度", toeic: "TOEIC 700" },
+  "TOEIC800 CEFR B2+": { eiken: "英検準1級程度", toeic: "TOEIC 800" },
+  "TOEIC900 CEFR C1": { eiken: "英検1級程度", toeic: "TOEIC 900+" },
 };
 
 export const getLevelDisplay = (level: string): string => {
