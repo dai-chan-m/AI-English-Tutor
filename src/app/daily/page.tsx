@@ -99,7 +99,7 @@ export default function DailyListPage() {
         <div className="text-center pt-4">
           <Link
             href="/"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition font-semibold"
           >
             トップページに戻る
           </Link>

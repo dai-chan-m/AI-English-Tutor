@@ -180,7 +180,7 @@ export default function WritingPractice() {
         <div className="flex justify-center">
           <button
             onClick={togglePromptGenerator}
-            className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition flex items-center gap-2"
+            className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition flex items-center gap-2 cursor-pointer font-semibold"
           >
             <span>
               {showPromptGenerator ? "お題選択を閉じる" : "お題を選択する"}
@@ -350,7 +350,7 @@ export default function WritingPractice() {
           <div className="flex flex-wrap gap-4 justify-center">
             <button
               type="submit"
-              className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 disabled:opacity-50 cursor-pointer font-semibold transition"
               disabled={loading || !inputText}
             >
               {loading ? "添削中..." : "添削する"}
@@ -442,7 +442,7 @@ export default function WritingPractice() {
         <div className="text-center">
           <Link
             href="/daily/writing"
-            className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition"
+            className="inline-block bg-green-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-600 transition font-semibold"
           >
             日替わり英作文を見る
           </Link>

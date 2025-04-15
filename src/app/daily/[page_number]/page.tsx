@@ -115,7 +115,7 @@ export default function DailyPage() {
         <div className="text-center mt-4">
           <Link
             href={`/daily/${pageNumber + 1}`}
-            className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition mr-4"
+            className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition mr-4 font-semibold"
           >
             次のページへ進む
           </Link>

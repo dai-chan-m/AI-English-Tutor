@@ -92,8 +92,8 @@ export default function Home() {
               で楽しく学べる
             </li>
             <li>
-              ✅ <span className="font-medium">英文のフィードバック</span>
-              も即時にもらえる
+              ✅ <span className="font-medium">リアルな英会話</span>
+              を学べる
             </li>
           </ul>
         </div>

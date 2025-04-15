@@ -192,7 +192,7 @@ function QuestionViewer({ questions }: { questions: QuestionType[] }) {
           <div className="text-center mt-10 print:hidden">
             <button
               onClick={() => window.print()}
-              className="bg-gray-700 text-white px-6 py-2 rounded hover:bg-gray-800"
+              className="bg-gray-700 text-white px-6 py-2 rounded-lg hover:bg-gray-800"
             >
               印刷する
             </button>

@@ -43,7 +43,7 @@ export default function LoginPage() {
         <div className="mt-4 text-center text-sm">
           <Link
             href="/"
-            className="text-gray-500 hover:underline hover:text-gray-700"
+            className="text-gray-500 hover:underline hover:text-gray-700 font-semibold"
           >
             トップページに戻る
           </Link>

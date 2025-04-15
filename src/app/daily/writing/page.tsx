@@ -102,7 +102,7 @@ export default function DailyWritingPage() {
         <div className="text-center pt-4">
           <Link
             href="/"
-            className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition"
+            className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition font-semibold"
           >
             トップページに戻る
           </Link>
