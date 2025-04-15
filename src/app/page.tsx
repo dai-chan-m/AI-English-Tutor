@@ -73,6 +73,31 @@ export default function Home() {
           </ul>
         </div>
 
+        {/* AI Chat */}
+        <div
+          className="bg-white border border-purple-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
+          onClick={() => router.push("/chat")}
+        >
+          <h2 className="text-2xl font-semibold text-purple-600 mb-4">
+            🤖 AI Chat
+          </h2>
+          <p className="text-gray-500 text-sm mb-3">AIと英語でチャットしよう</p>
+          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
+            <li>
+              ✅ <span className="font-medium">リアルタイム英会話練習</span>
+              で実践力アップ
+            </li>
+            <li>
+              ✅ 自分に合った<span className="font-medium">キャラ設定</span>
+              で楽しく学べる
+            </li>
+            <li>
+              ✅ <span className="font-medium">英文のフィードバック</span>
+              も即時にもらえる
+            </li>
+          </ul>
+        </div>
+
         {/* 日替わり英単語ドリル */}
         <div
           className="bg-white border border-yellow-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
@@ -123,34 +148,7 @@ export default function Home() {
             </li>
           </ul>
         </div>
-
-        {/* AI Chat */}
-        <div
-          className="bg-white border border-purple-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
-          onClick={() => router.push("/chat")}
-        >
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">
-            🤖 AI Chat
-          </h2>
-          <p className="text-gray-500 text-sm mb-3">AIと英語でチャットしよう</p>
-          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
-            <li>
-              ✅ <span className="font-medium">リアルタイム英会話練習</span>
-              で実践力アップ
-            </li>
-            <li>
-              ✅ 自分に合った<span className="font-medium">キャラ設定</span>
-              で楽しく学べる
-            </li>
-            <li>
-              ✅ <span className="font-medium">英文のフィードバック</span>
-              も即時にもらえる
-            </li>
-          </ul>
-        </div>
       </div>
-
-      {/* 日替わり英単語ドリル */}
       <Footer />
     </main>
   );
