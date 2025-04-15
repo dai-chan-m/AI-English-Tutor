@@ -24,6 +24,39 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+        {/* AI Chat */}
+        <div
+          className="bg-white border border-purple-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer relative"
+          onClick={() => router.push("/chat")}
+        >
+          {/* NEWバッジ */}
+          <div className="absolute top-2 right-2">
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow">
+              NEW!
+            </span>
+          </div>
+
+          <h2 className="text-2xl font-semibold text-purple-600 mb-4 flex items-center justify-center gap-2">
+            {CHAT_MODE}
+          </h2>
+
+          <p className="text-gray-500 text-sm mb-3">AIと英語でチャットしよう</p>
+          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
+            <li>
+              ✅ <span className="font-medium">リアルタイム英会話練習</span>
+              で実践力アップ
+            </li>
+            <li>
+              ✅ 自分に合った<span className="font-medium">キャラ設定</span>
+              で楽しく学べる
+            </li>
+            <li>
+              ✅ <span className="font-medium">リアルな英会話</span>
+              を学べる
+            </li>
+          </ul>
+        </div>
+
         {/* Vocab モード */}
         <div
           className="bg-white border border-blue-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
@@ -70,31 +103,6 @@ export default function Home() {
               の弱点を分析
             </li>
             <li>✅ 手書き英作文の写真📷や音声入力🎤にも対応</li>
-          </ul>
-        </div>
-
-        {/* AI Chat */}
-        <div
-          className="bg-white border border-purple-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
-          onClick={() => router.push("/chat")}
-        >
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">
-            {CHAT_MODE}
-          </h2>
-          <p className="text-gray-500 text-sm mb-3">AIと英語でチャットしよう</p>
-          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
-            <li>
-              ✅ <span className="font-medium">リアルタイム英会話練習</span>
-              で実践力アップ
-            </li>
-            <li>
-              ✅ 自分に合った<span className="font-medium">キャラ設定</span>
-              で楽しく学べる
-            </li>
-            <li>
-              ✅ <span className="font-medium">リアルな英会話</span>
-              を学べる
-            </li>
           </ul>
         </div>
 
