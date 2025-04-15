@@ -72,7 +72,7 @@ export default function Home() {
             <li>✅ 手書き英作文の写真📷や音声入力🎤にも対応</li>
           </ul>
         </div>
-        
+
         {/* 日替わり英単語ドリル */}
         <div
           className="bg-white border border-yellow-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
@@ -96,7 +96,7 @@ export default function Home() {
             <li>✅ 過去問アーカイブで復習も簡単</li>
           </ul>
         </div>
-        
+
         {/* 日替わり英作文 */}
         <div
           className="bg-white border border-green-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
@@ -118,7 +118,33 @@ export default function Home() {
               のお題で自分のペースで学習
             </li>
             <li>
-              ✅ <span className="font-medium">模範解答</span>を参考に表現力を磨く
+              ✅ <span className="font-medium">模範解答</span>
+              を参考に表現力を磨く
+            </li>
+          </ul>
+        </div>
+
+        {/* AI Chat */}
+        <div
+          className="bg-white border border-purple-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
+          onClick={() => router.push("/chat")}
+        >
+          <h2 className="text-2xl font-semibold text-purple-600 mb-4">
+            🤖 AI Chat
+          </h2>
+          <p className="text-gray-500 text-sm mb-3">AIと英語でチャットしよう</p>
+          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
+            <li>
+              ✅ <span className="font-medium">リアルタイム英会話練習</span>
+              で実践力アップ
+            </li>
+            <li>
+              ✅ 自分に合った<span className="font-medium">キャラ設定</span>
+              で楽しく学べる
+            </li>
+            <li>
+              ✅ <span className="font-medium">英文のフィードバック</span>
+              も即時にもらえる
             </li>
           </ul>
         </div>
