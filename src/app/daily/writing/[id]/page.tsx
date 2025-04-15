@@ -11,6 +11,7 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import { getLevelDisplay } from "@/constants/levels";
 import { fetchData } from "@/utils/supabaseHelpers";
+import { FaMicrophone, FaStop } from "react-icons/fa";
 
 type WritingPrompt = {
   id: number;
@@ -275,17 +276,19 @@ export default function DailyWritingDetailPage() {
               <button
                 type="button"
                 onClick={handleStart}
-                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold shadow transition cursor-pointer"
+                className="px-4 py-2 rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
               >
-                🎤 音声入力開始
+                <FaMicrophone className="mr-2 text-base" />
+                <span>音声で入力する</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleStop}
-                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold shadow transition cursor-pointer"
+                className="px-4 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
               >
-                🔴 録音停止
+                <FaStop className="mr-2 text-base" />
+                <span>音声入力を停止する</span>
               </button>
             )}
           </div>

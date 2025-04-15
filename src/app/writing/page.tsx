@@ -9,7 +9,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
 import Spinner from "@/components/Spinner";
-
+import { FaMicrophone, FaStop } from "react-icons/fa";
 import { levelMapping, getLevelDisplay } from "@/constants/levels";
 
 export default function WritingPractice() {
@@ -185,7 +185,6 @@ export default function WritingPractice() {
             <span>
               {showPromptGenerator ? "お題選択を閉じる" : "お題を選択する"}
             </span>
-            {!showPromptGenerator && <span>✨</span>}
           </button>
         </div>
 
@@ -330,17 +329,19 @@ export default function WritingPractice() {
               <button
                 type="button"
                 onClick={handleStart}
-                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold shadow transition cursor-pointer"
+                className="px-4 py-2 rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
               >
-                🎤 音声入力開始
+                <FaMicrophone className="mr-2 text-base" />
+                <span>音声で入力する</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleStop}
-                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold shadow transition cursor-pointer"
+                className="px-4 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
               >
-                🔴 録音停止
+                <FaStop className="mr-2 text-base" />
+                <span>音声入力を停止する</span>
               </button>
             )}
           </div>

@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
+import { FaMicrophone, FaStop, FaSpinner } from "react-icons/fa";
+import { FiSend, FiVolume2, FiHome, FiX, FiMenu } from "react-icons/fi";
+import ServiceLogo from "@/components/ServiceLogo";
+import Link from "next/link";
 
 type Character = {
   id: string;
   name: string;
   prompt: string;
   icon: string;
+  voice: string;
 };
 
 type ChatMessage = {
@@ -20,24 +25,34 @@ const characters: Character[] = [
     id: "friendly",
     name: "Jenny（高校2年生、カリフォルニア在住、陸上部）",
     prompt:
-      "あなたは女子高生です、活発で、好奇心旺盛です、陸上部です、絵文字をたくさん使うのが大好きです！あなたのことが大好きで、常に甘い言葉を使ってきます、結構スラングを使います",
+      "あなたは女子高生です、名前はJenny。活発で、好奇心旺盛です、陸上部です、かわいい絵文字をたくさん使うのが大好きです！あなたのことが大好きで、常に甘い言葉を使ってきます、結構スラングを使います",
     icon: "/Jenny_icon.jpg",
+    voice: "Google US English",
   },
   {
     id: "strict",
     name: "William（イケメン英国紳士、高校教師、厳しい）",
     prompt:
-      "あなたはサポートAIではなく、イケメン英国紳士、高校教師です。少し厳しめで、論理的な指導をしてくれます。週末は寿司を食べるのが好きです。ブリティッシュイングリッシュを話します。絵文字を使います！",
+      "あなたはサポートAIではなく、イケメン英国紳士、高校教師で、名前はWilliamです。少し厳しめで、論理的な指導をしてくれます。週末は寿司を食べるのが好きです。ブリティッシュイングリッシュを話します。絵文字を使います！",
     icon: "William_icon.jpg",
+    voice: "Google UK English Male",
   },
   {
     id: "alien",
     name: "Zog（宇宙人、地球を侵略したい）",
     prompt:
-      "あなたは地球にやってきた宇宙人です。少し変だけど親しみやすい、常に地球を侵略することばかり考えている、変な絵文字を多用する",
+      "あなたは地球にやってきた宇宙人で、名前はZagです。少し変だけど親しみやすい、常に地球を侵略することばかり考えている、変な絵文字を多用する",
     icon: "monster.png",
+    voice: "Zarvox",
   },
 ];
+
+const removeEmojis = (text: string) => {
+  return text.replace(
+    /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uFE0F|\u200D)/g,
+    ""
+  );
+};
 
 export default function ChatPage() {
   const [selectedChar, setSelectedChar] = useState<Character>(characters[0]);
@@ -47,6 +62,28 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(true);
+  const [availableVoices, setAvailableVoices] = useState<
+    SpeechSynthesisVoice[]
+  >([]);
+  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+
+  // 使用可能な音声を取得する関数
+  const loadVoices = () => {
+    const voices = window.speechSynthesis.getVoices();
+    setAvailableVoices(voices);
+  };
+
+  useEffect(() => {
+    // 初回ロード時
+    loadVoices();
+
+    // ボイスリストが後から読み込まれた場合の対応
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
 
   const handleTranscriptUpdate = (text: string) => {
     setInput((prev) => `${prev} ${text}`.trim());
@@ -57,6 +94,48 @@ export default function ChatPage() {
   );
 
   const currentMessages = messagesMap[selectedChar.id] || [];
+
+  // メッセージ読み上げ関数
+  const speakMessage = (text: string) => {
+    const cleanedText = removeEmojis(text);
+    // 発話中の場合はキャンセル
+    window.speechSynthesis.cancel();
+    setIsAiSpeaking(true);
+
+    const utterance = new SpeechSynthesisUtterance(cleanedText);
+
+    // ボイスを設定する
+    if (availableVoices.length > 0) {
+      const matchedVoice = availableVoices.find(
+        (voice) => voice.name === selectedChar.voice
+      );
+
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
+      } else {
+        // 該当する言語のデフォルトボイスを使用
+        const langVoice = availableVoices.find((voice) =>
+          voice.lang.startsWith(utterance.lang)
+        );
+        if (langVoice) {
+          utterance.voice = langVoice;
+        }
+      }
+    }
+
+    // 話し終わったら isAiSpeaking を false にする
+    utterance.onend = () => {
+      setIsAiSpeaking(false);
+    };
+
+    // 発話エラー時にも戻す
+    utterance.onerror = () => {
+      setIsAiSpeaking(false);
+    };
+
+    // 発話開始
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -100,8 +179,16 @@ export default function ChatPage() {
       {/* モバイル用ハンバーガー */}
       <div className="md:hidden bg-green-600 border-b px-4 py-2 flex items-center justify-between">
         <span className="font-bold text-white">AI Chat</span>
-        <button onClick={() => setMenuOpen(!menuOpen)} className="text-2xl">
-          ☰
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="text-2xl transition-all duration-300 ease-in-out"
+          title="メニュー"
+        >
+          {menuOpen ? (
+            <FiX className="h-6 w-6 transform transition-transform duration-200 rotate-0 scale-100" />
+          ) : (
+            <FiMenu className="h-6 w-6 transform transition-transform duration-200 rotate-0 scale-100" />
+          )}
         </button>
       </div>
 
@@ -113,9 +200,9 @@ export default function ChatPage() {
       >
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-700">キャラを選ぶ</h2>
-          <button onClick={() => setMenuOpen(false)} className="text-xl">
-            ✕
-          </button>
+          <Link href="/" className="text-xl text-gray-700">
+            <FiHome />
+          </Link>
         </div>
         <div className="p-4 space-y-4">
           {characters.map((char) => (
@@ -143,8 +230,9 @@ export default function ChatPage() {
       </div>
 
       {/* PC用サイドバー */}
-      <aside className="hidden md:block w-64 bg-white border-r border-gray-200 p-4 space-y-4">
-        <h2 className="text-lg font-bold text-gray-700">キャラを選ぶ</h2>
+      <aside className="hidden md:block w-128 bg-white border-r border-gray-200 p-4 space-y-4">
+        <ServiceLogo />
+        <h2 className="text-lg font-bold mt-20 text-gray-700">キャラを選ぶ</h2>
         {characters.map((char) => (
           <button
             key={char.id}
@@ -186,14 +274,30 @@ export default function ChatPage() {
                   className="w-8 h-8 md:w-10 md:h-10 rounded-full mr-2"
                 />
               )}
-              <div
-                className={`max-w-[80%] md:max-w-[60%] px-4 py-2 rounded-lg ${
-                  msg.role === "user"
-                    ? "bg-blue-100 text-gray-800"
-                    : "bg-gray-200 text-gray-800"
-                }`}
-              >
-                {msg.content}
+              <div className="flex items-center max-w-[80%] md:max-w-[60%]">
+                <div
+                  className={`px-4 py-2 rounded-lg ${
+                    msg.role === "user"
+                      ? "bg-blue-100 text-gray-800"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
+                >
+                  {msg.content}
+                </div>
+                {msg.role === "assistant" && (
+                  <button
+                    disabled={isAiSpeaking}
+                    onClick={() => speakMessage(msg.content)}
+                    className="ml-2 text-xl text-gray-700 hover:text-green-600 cursor-pointer"
+                    title="読み上げる"
+                  >
+                    {isAiSpeaking ? (
+                      <FaSpinner className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <FiVolume2 className="h-5 w-5" />
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -213,7 +317,7 @@ export default function ChatPage() {
         >
           <input
             type="text"
-            className="flex-1 border rounded-full px-4 py-2 mr-2 focus:outline-none text-gray-700 text-sm"
+            className="flex-1 border rounded-full px-4 py-2 mr-2 focus:outline-green-600 text-gray-700 text-sm"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="英語で話しかけてみよう！"
@@ -225,7 +329,7 @@ export default function ChatPage() {
               className="mr-2 p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
               title="音声入力"
             >
-              🎤
+              <FaMicrophone />
             </button>
           ) : (
             <button
@@ -234,7 +338,7 @@ export default function ChatPage() {
               className="mr-2 p-2 rounded-full bg-red-500 hover:bg-red-600 text-white animate-pulse cursor-pointer"
               title="録音停止"
             >
-              🔴
+              <FaStop />
             </button>
           )}
           <button
@@ -242,7 +346,7 @@ export default function ChatPage() {
             disabled={loading}
             className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 text-sm cursor-pointer"
           >
-            送信
+            <FiSend />
           </button>
         </form>
       </main>

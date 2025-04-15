@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { APP_NAME, WRITING_MODE, VOCAB_MODE } from "@/constants/app";
+import { APP_NAME, WRITING_MODE, VOCAB_MODE, CHAT_MODE } from "@/constants/app";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -79,7 +79,7 @@ export default function Home() {
           onClick={() => router.push("/chat")}
         >
           <h2 className="text-2xl font-semibold text-purple-600 mb-4">
-            🤖 AI Chat
+            {CHAT_MODE}
           </h2>
           <p className="text-gray-500 text-sm mb-3">AIと英語でチャットしよう</p>
           <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
