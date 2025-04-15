@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { OCRDropZone } from "@/components/OCRDropZone";
 import { WRITING_MODE } from "@/constants/app";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
@@ -19,13 +20,11 @@ export default function WritingPractice() {
   const [promptLoading, setPromptLoading] = useState(false);
   const [tone, setTone] = useState("gentle");
   const [tab, setTab] = useState<"summary" | "feedback" | "model">("feedback");
-  const [isRecording, setIsRecording] = useState(false);
   const [level, setLevel] = useState("CEFR A2-B1");
   const [promptTopic, setPromptTopic] = useState("");
   const [promptJapanese, setPromptJapanese] = useState("");
   const [modelAnswer, setModelAnswer] = useState("");
   const [showPromptGenerator, setShowPromptGenerator] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const MAX_LENGTH = isAuthenticated ? 1000 : 300;
   const remaining = MAX_LENGTH - inputText.length;
 
@@ -96,14 +95,6 @@ export default function WritingPractice() {
     const matches = [...text.matchAll(/🧑‍🏫 添削後の文: (.+)/g)];
     return matches.map((m) => `💠 ${m[1]}`).join("\n");
   };
-
-  const normalizeSentence = (text: string): string => {
-    const trimmed = text.trim();
-    const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-    const endsWithPunctuation = /[.!?]$/.test(capitalized);
-    return endsWithPunctuation ? capitalized : capitalized + ".";
-  };
-
   const cleanOcrText = (text: string): string => {
     return text
       .replace(/\|/g, "I") // 「|」を大文字のIに補正
@@ -141,43 +132,22 @@ export default function WritingPractice() {
       }
     } catch (error) {
       console.error("Error getting random writing prompt:", error);
-      alert("選択したレベルのお題が見つからないか、取得に失敗しました。別のレベルを選択するか、もう一度お試しください。");
+      alert(
+        "選択したレベルのお題が見つからないか、取得に失敗しました。別のレベルを選択するか、もう一度お試しください。"
+      );
     } finally {
       setPromptLoading(false);
     }
   };
 
   /* 音声認識関連 */
-  const handleStart = () => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.continuous = false;
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const spoken = event.results[0][0].transcript;
-      setInputText((prev) => `${prev} ${normalizeSentence(spoken)}`);
-      recognitionRef.current?.stop();
-      recognitionRef.current?.abort();
-    };
-
-    recognition.onend = () => {
-      recognitionRef.current?.stop();
-      recognitionRef.current?.abort();
-      setIsRecording(false); // 自然停止時も
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
+  const handleTranscriptUpdate = (text: string) => {
+    setInputText((prev) => `${prev} ${text}`);
   };
 
-  const handleStop = () => {
-    recognitionRef.current?.stop();
-    recognitionRef.current?.abort();
-    setIsRecording(false);
-  };
+  const { isRecording, handleStart, handleStop } = useSpeechRecognition(
+    handleTranscriptUpdate
+  );
 
   const togglePromptGenerator = () => {
     setShowPromptGenerator(!showPromptGenerator);
@@ -213,9 +183,7 @@ export default function WritingPractice() {
             className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition flex items-center gap-2"
           >
             <span>
-              {showPromptGenerator
-                ? "お題選択を閉じる"
-                : "お題を選択する"}
+              {showPromptGenerator ? "お題選択を閉じる" : "お題を選択する"}
             </span>
             {!showPromptGenerator && <span>✨</span>}
           </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 
 type Character = {
   id: string;
@@ -46,6 +47,14 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(true);
+
+  const handleTranscriptUpdate = (text: string) => {
+    setInput((prev) => `${prev} ${text}`.trim());
+  };
+
+  const { isRecording, handleStart, handleStop } = useSpeechRecognition(
+    handleTranscriptUpdate
+  );
 
   const currentMessages = messagesMap[selectedChar.id] || [];
 
@@ -209,10 +218,29 @@ export default function ChatPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="英語で話しかけてみよう！"
           />
+          {!isRecording ? (
+            <button
+              type="button"
+              onClick={handleStart}
+              className="mr-2 p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+              title="音声入力"
+            >
+              🎤
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleStop}
+              className="mr-2 p-2 rounded-full bg-red-500 hover:bg-red-600 text-white animate-pulse cursor-pointer"
+              title="録音停止"
+            >
+              🔴
+            </button>
+          )}
           <button
             type="submit"
             disabled={loading}
-            className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 text-sm"
+            className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 text-sm cursor-pointer"
           >
             送信
           </button>

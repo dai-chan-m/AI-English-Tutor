@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
@@ -8,6 +8,7 @@ import Spinner from "@/components/Spinner";
 import { usePathname } from "next/navigation";
 import { OCRDropZone } from "@/components/OCRDropZone";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import { getLevelDisplay } from "@/constants/levels";
 import { fetchData } from "@/utils/supabaseHelpers";
 
@@ -30,8 +31,6 @@ export default function DailyWritingDetailPage() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [tab, setTab] = useState<"summary" | "feedback" | "model">("feedback");
   const [tone, setTone] = useState("gentle");
-  const [isRecording, setIsRecording] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const MAX_LENGTH = isAuthenticated ? 1000 : 300;
   const remaining = MAX_LENGTH - userEssay.length;
 
@@ -44,37 +43,37 @@ export default function DailyWritingDetailPage() {
       if (!id) return;
 
       setLoading(true);
-      
+
       const result = await fetchData<WritingPrompt>("daily_writing", {
         column: "id",
         value: id,
-        isServer: false
+        isServer: false,
       });
 
       if (result.error) {
         console.error("Error fetching writing prompt:", result.error);
-        setError(result.error instanceof Error ? result.error : new Error(String(result.error)));
-      } else if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+        setError(
+          result.error instanceof Error
+            ? result.error
+            : new Error(String(result.error))
+        );
+      } else if (
+        result.data &&
+        Array.isArray(result.data) &&
+        result.data.length > 0
+      ) {
         setPrompt(result.data[0]);
       } else if (result.data && !Array.isArray(result.data)) {
         setPrompt(result.data);
       } else {
         setError(new Error("Writing prompt not found"));
       }
-      
+
       setLoading(false);
     }
 
     fetchWritingPrompt();
   }, [id]);
-
-  const normalizeSentence = (text: string): string => {
-    const trimmed = text.trim();
-    const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-    const endsWithPunctuation = /[.!?]$/.test(capitalized);
-    return endsWithPunctuation ? capitalized : capitalized + ".";
-  };
-
   const cleanOcrText = (text: string): string => {
     return text
       .replace(/\|/g, "I") // 「|」を大文字のIに補正
@@ -82,44 +81,13 @@ export default function DailyWritingDetailPage() {
   };
 
   /* 音声認識関連 */
-  const handleStart = () => {
-    // クライアントサイドでのみ実行する
-    if (typeof window === "undefined") return;
-
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("お使いのブラウザは音声認識をサポートしていません");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.continuous = false;
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const spoken = event.results[0][0].transcript;
-      setUserEssay((prev) => `${prev} ${normalizeSentence(spoken)}`);
-      recognitionRef.current?.stop();
-      recognitionRef.current?.abort();
-    };
-
-    recognition.onend = () => {
-      recognitionRef.current?.stop();
-      recognitionRef.current?.abort();
-      setIsRecording(false); // 自然停止時も
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
+  const handleTranscriptUpdate = (text: string) => {
+    setUserEssay((prev) => `${prev} ${text}`);
   };
 
-  const handleStop = () => {
-    recognitionRef.current?.stop();
-    recognitionRef.current?.abort();
-    setIsRecording(false);
-  };
+  const { isRecording, handleStart, handleStop } = useSpeechRecognition(
+    handleTranscriptUpdate
+  );
 
   const handleGetFeedback = async () => {
     if (!userEssay.trim()) return;
