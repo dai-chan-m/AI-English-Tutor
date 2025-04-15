@@ -6,6 +6,7 @@ import { FaMicrophone, FaStop, FaSpinner } from "react-icons/fa";
 import { FiSend, FiVolume2, FiHome, FiX, FiMenu } from "react-icons/fi";
 import ServiceLogo from "@/components/ServiceLogo";
 import Link from "next/link";
+import { CHAT_MODE } from "@/constants/app";
 
 type Character = {
   id: string;
@@ -65,7 +66,7 @@ export default function ChatPage() {
   const [availableVoices, setAvailableVoices] = useState<
     SpeechSynthesisVoice[]
   >([]);
-  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
 
   // 使用可能な音声を取得する関数
   const loadVoices = () => {
@@ -96,11 +97,11 @@ export default function ChatPage() {
   const currentMessages = messagesMap[selectedChar.id] || [];
 
   // メッセージ読み上げ関数
-  const speakMessage = (text: string) => {
+  const speakMessage = (text: string, index: number) => {
     const cleanedText = removeEmojis(text);
     // 発話中の場合はキャンセル
     window.speechSynthesis.cancel();
-    setIsAiSpeaking(true);
+    setSpeakingIndex(index);
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
 
@@ -125,12 +126,12 @@ export default function ChatPage() {
 
     // 話し終わったら isAiSpeaking を false にする
     utterance.onend = () => {
-      setIsAiSpeaking(false);
+      setSpeakingIndex(null);
     };
 
     // 発話エラー時にも戻す
     utterance.onerror = () => {
-      setIsAiSpeaking(false);
+      setSpeakingIndex(null);
     };
 
     // 発話開始
@@ -199,7 +200,7 @@ export default function ChatPage() {
         }`}
       >
         <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-lg font-bold text-gray-700">キャラを選ぶ</h2>
+          <h2 className="text-lg font-bold text-gray-700">{CHAT_MODE}</h2>
           <Link href="/" className="text-xl text-gray-700">
             <FiHome />
           </Link>
@@ -232,7 +233,7 @@ export default function ChatPage() {
       {/* PC用サイドバー */}
       <aside className="hidden md:block w-128 bg-white border-r border-gray-200 p-4 space-y-4">
         <ServiceLogo />
-        <h2 className="text-lg font-bold mt-20 text-gray-700">キャラを選ぶ</h2>
+        <h2 className="text-lg font-bold mt-20 text-gray-700">{CHAT_MODE}</h2>
         {characters.map((char) => (
           <button
             key={char.id}
@@ -286,12 +287,12 @@ export default function ChatPage() {
                 </div>
                 {msg.role === "assistant" && (
                   <button
-                    disabled={isAiSpeaking}
-                    onClick={() => speakMessage(msg.content)}
+                    disabled={speakingIndex !== null}
+                    onClick={() => speakMessage(msg.content, idx)}
                     className="ml-2 text-xl text-gray-700 hover:text-green-600 cursor-pointer"
                     title="読み上げる"
                   >
-                    {isAiSpeaking ? (
+                    {speakingIndex == idx ? (
                       <FaSpinner className="h-5 w-5 animate-spin" />
                     ) : (
                       <FiVolume2 className="h-5 w-5" />
