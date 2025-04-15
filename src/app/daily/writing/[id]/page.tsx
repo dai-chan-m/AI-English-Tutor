@@ -276,7 +276,7 @@ export default function DailyWritingDetailPage() {
               <button
                 type="button"
                 onClick={handleStart}
-                className="px-4 py-2 rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
+                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
               >
                 <FaMicrophone className="mr-2 text-base" />
                 <span>音声で入力する</span>
@@ -285,7 +285,7 @@ export default function DailyWritingDetailPage() {
               <button
                 type="button"
                 onClick={handleStop}
-                className="px-4 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
               >
                 <FaStop className="mr-2 text-base" />
                 <span>音声入力を停止する</span>

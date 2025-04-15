@@ -25,14 +25,14 @@ export default function DailyWritingPage() {
   });
 
   async function fetchPrompts() {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+
     const result = await fetchData<WritingPrompt[]>("daily_writing", {
       orderBy: "id",
       orderDirection: "desc",
-      isServer: false
+      isServer: false,
     });
-    
+
     setState({
       data: result.data,
       loading: false,
