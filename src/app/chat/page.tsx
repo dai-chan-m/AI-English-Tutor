@@ -194,7 +194,7 @@ export default function ChatPage() {
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
       {/* モバイル用ハンバーガー */}
       <div className="md:hidden bg-green-600 border-b px-4 py-2 flex items-center justify-between">
-        <span className="font-bold text-white">AI Chat</span>
+        <span className="font-bold text-white">{CHAT_MODE}</span>
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className="text-2xl transition-all duration-300 ease-in-out"
