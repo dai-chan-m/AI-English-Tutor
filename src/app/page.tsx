@@ -26,7 +26,7 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
         {/* AI Chat */}
         <div
-          className="bg-white border border-purple-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer relative"
+          className="bg-white border border-red-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer relative"
           onClick={() => router.push("/chat")}
         >
           {/* NEWバッジ */}
@@ -36,7 +36,7 @@ export default function Home() {
             </span>
           </div>
 
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4 flex items-center justify-center gap-2">
+          <h2 className="text-2xl font-semibold text-red-600 mb-4 flex items-center justify-center gap-2">
             {CHAT_MODE}
           </h2>
 
@@ -108,10 +108,10 @@ export default function Home() {
 
         {/* 日替わり英単語ドリル */}
         <div
-          className="bg-white border border-yellow-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
+          className="bg-white border border-blue-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
           onClick={() => router.push("/daily")}
         >
-          <h2 className="text-2xl font-semibold text-yellow-600 mb-4">
+          <h2 className="text-2xl font-semibold text-blue-600 mb-4">
             📅 日替わり英単語ドリル
           </h2>
           <p className="text-gray-500 text-sm mb-3">
@@ -132,10 +132,10 @@ export default function Home() {
 
         {/* 日替わり英作文 */}
         <div
-          className="bg-white border border-red-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
+          className="bg-white border border-green-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
           onClick={() => router.push("/daily/writing")}
         >
-          <h2 className="text-2xl font-semibold text-red-600 mb-4">
+          <h2 className="text-2xl font-semibold text-green-600 mb-4">
             ✍️ 日替わり英作文
           </h2>
           <p className="text-gray-500 text-sm mb-3">
