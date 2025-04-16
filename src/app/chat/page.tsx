@@ -99,43 +99,58 @@ export default function ChatPage() {
   // メッセージ読み上げ関数
   const speakMessage = (text: string, index: number) => {
     const cleanedText = removeEmojis(text);
+
+    // ピリオド、疑問符、感嘆符で分割
+    const sentences = cleanedText.match(/[^.!?]+[.!?]?/g) || [cleanedText];
+
     // 発話中の場合はキャンセル
     window.speechSynthesis.cancel();
     setSpeakingIndex(index);
 
-    const utterance = new SpeechSynthesisUtterance(cleanedText);
+    let current = 0;
 
-    // ボイスを設定する
-    if (availableVoices.length > 0) {
-      const matchedVoice = availableVoices.find(
-        (voice) => voice.name === selectedChar.voice
-      );
+    const speakNext = () => {
+      if (current >= sentences.length) {
+        setSpeakingIndex(null);
+        return;
+      }
 
-      if (matchedVoice) {
-        utterance.voice = matchedVoice;
-      } else {
-        // 該当する言語のデフォルトボイスを使用
-        const langVoice = availableVoices.find((voice) =>
-          voice.lang.startsWith(utterance.lang)
+      const utterance = new SpeechSynthesisUtterance(sentences[current].trim());
+
+      // ボイスを設定する
+      if (availableVoices.length > 0) {
+        const matchedVoice = availableVoices.find(
+          (voice) => voice.name === selectedChar.voice
         );
-        if (langVoice) {
-          utterance.voice = langVoice;
+
+        if (matchedVoice) {
+          utterance.voice = matchedVoice;
+        } else {
+          const langVoice = availableVoices.find((voice) =>
+            voice.lang.startsWith(utterance.lang)
+          );
+          if (langVoice) {
+            utterance.voice = langVoice;
+          }
         }
       }
-    }
 
-    // 話し終わったら isAiSpeaking を false にする
-    utterance.onend = () => {
-      setSpeakingIndex(null);
+      // 話し終わったらインデックスをクリア
+      utterance.onend = () => {
+        current++;
+        speakNext();
+      };
+
+      // エラー時も進める
+      utterance.onerror = () => {
+        current++;
+        speakNext();
+      };
+
+      window.speechSynthesis.speak(utterance);
     };
 
-    // 発話エラー時にも戻す
-    utterance.onerror = () => {
-      setSpeakingIndex(null);
-    };
-
-    // 発話開始
-    window.speechSynthesis.speak(utterance);
+    speakNext();
   };
 
   const handleSend = async () => {
@@ -287,7 +302,6 @@ export default function ChatPage() {
                 </div>
                 {msg.role === "assistant" && (
                   <button
-                    disabled={speakingIndex !== null}
                     onClick={() => speakMessage(msg.content, idx)}
                     className="ml-2 text-xl text-gray-700 hover:text-green-600 cursor-pointer"
                     title="読み上げる"
