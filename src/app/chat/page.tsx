@@ -7,53 +7,10 @@ import { FiSend, FiVolume2, FiHome, FiX, FiMenu } from "react-icons/fi";
 import ServiceLogo from "@/components/ServiceLogo";
 import Link from "next/link";
 import { CHAT_MODE } from "@/constants/app";
-
-type Character = {
-  id: string;
-  name: string;
-  prompt: string;
-  icon: string;
-  voice: string;
-};
-
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
-const characters: Character[] = [
-  {
-    id: "friendly",
-    name: "Jenny（高校2年生、カリフォルニア在住、陸上部）",
-    prompt:
-      "あなたは女子高生です、名前はJenny。活発で、好奇心旺盛です、陸上部です、かわいい絵文字をたくさん使うのが大好きです！あなたのことが大好きで、常に甘い言葉を使ってきます、結構スラングを使います",
-    icon: "/Jenny_icon.jpg",
-    voice: "Google US English",
-  },
-  {
-    id: "strict",
-    name: "William（イケメン英国紳士、高校教師、厳しい）",
-    prompt:
-      "あなたはサポートAIではなく、イケメン英国紳士、高校教師で、名前はWilliamです。少し厳しめで、論理的な指導をしてくれます。週末は寿司を食べるのが好きです。ブリティッシュイングリッシュを話します。絵文字を使います！",
-    icon: "William_icon.jpg",
-    voice: "Google UK English Male",
-  },
-  {
-    id: "alien",
-    name: "Zog（宇宙人、地球を侵略したい）",
-    prompt:
-      "あなたは地球にやってきた宇宙人で、名前はZagです。少し変だけど親しみやすい、常に地球を侵略することばかり考えている、変な絵文字を多用する",
-    icon: "monster.png",
-    voice: "Zarvox",
-  },
-];
-
-const removeEmojis = (text: string) => {
-  return text.replace(
-    /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uFE0F|\u200D)/g,
-    ""
-  );
-};
+import { removeEmojis, speakMessage, loadVoices } from "@/utils/speechUtils";
+import { sendChatMessage } from "@/utils/chatUtils";
+import { Character, ChatMessage } from "@/types/chat";
+import { characters } from "@/utils/characterData";
 
 export default function ChatPage() {
   const [selectedChar, setSelectedChar] = useState<Character>(characters[0]);
@@ -68,18 +25,14 @@ export default function ChatPage() {
   >([]);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
 
-  // 使用可能な音声を取得する関数
-  const loadVoices = () => {
-    const voices = window.speechSynthesis.getVoices();
-    setAvailableVoices(voices);
-  };
-
   useEffect(() => {
     // 初回ロード時
-    loadVoices();
+    setAvailableVoices(loadVoices());
 
     // ボイスリストが後から読み込まれた場合の対応
-    window.speechSynthesis.onvoiceschanged = loadVoices;
+    window.speechSynthesis.onvoiceschanged = () => {
+      setAvailableVoices(loadVoices());
+    };
 
     return () => {
       window.speechSynthesis.onvoiceschanged = null;
@@ -96,61 +49,15 @@ export default function ChatPage() {
 
   const currentMessages = messagesMap[selectedChar.id] || [];
 
-  // メッセージ読み上げ関数
-  const speakMessage = (text: string, index: number) => {
-    const cleanedText = removeEmojis(text);
-
-    // ピリオド、疑問符、感嘆符で分割
-    const sentences = cleanedText.match(/[^.!?]+[.!?]?/g) || [cleanedText];
-
-    // 発話中の場合はキャンセル
-    window.speechSynthesis.cancel();
-    setSpeakingIndex(index);
-
-    let current = 0;
-
-    const speakNext = () => {
-      if (current >= sentences.length) {
-        setSpeakingIndex(null);
-        return;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(sentences[current].trim());
-
-      // ボイスを設定する
-      if (availableVoices.length > 0) {
-        const matchedVoice = availableVoices.find(
-          (voice) => voice.name === selectedChar.voice
-        );
-
-        if (matchedVoice) {
-          utterance.voice = matchedVoice;
-        } else {
-          const langVoice = availableVoices.find((voice) =>
-            voice.lang.startsWith(utterance.lang)
-          );
-          if (langVoice) {
-            utterance.voice = langVoice;
-          }
-        }
-      }
-
-      // 話し終わったらインデックスをクリア
-      utterance.onend = () => {
-        current++;
-        speakNext();
-      };
-
-      // エラー時も進める
-      utterance.onerror = () => {
-        current++;
-        speakNext();
-      };
-
-      window.speechSynthesis.speak(utterance);
-    };
-
-    speakNext();
+  // メッセージ読み上げ処理
+  const handleSpeakMessage = (text: string, index: number) => {
+    speakMessage(
+      removeEmojis(text),
+      index,
+      selectedChar.voice,
+      availableVoices,
+      setSpeakingIndex
+    );
   };
 
   const handleSend = async () => {
@@ -165,22 +72,13 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/ai-chat", {
-        method: "POST",
-        body: JSON.stringify({
-          messages: newMessages,
-          systemPrompt: selectedChar.prompt,
-        }),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await res.json();
-
+      const reply = await sendChatMessage(newMessages, selectedChar.prompt);
+      
       setMessagesMap({
         ...messagesMap,
         [selectedChar.id]: [
           ...newMessages,
-          { role: "assistant", content: data.reply },
+          { role: "assistant", content: reply },
         ],
       });
     } catch (err) {
@@ -302,7 +200,7 @@ export default function ChatPage() {
                 </div>
                 {msg.role === "assistant" && (
                   <button
-                    onClick={() => speakMessage(msg.content, idx)}
+                    onClick={() => handleSpeakMessage(msg.content, idx)}
                     className="ml-2 text-xl text-gray-700 hover:text-green-600 cursor-pointer"
                     title="読み上げる"
                   >
