@@ -27,7 +27,7 @@ export default function ChatPage() {
   );
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -297,6 +297,7 @@ export default function ChatPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="英語で話しかけてみよう！"
             disabled={!selectedChar}
+            style={{ fontSize: "16px" }}
           />
           {!isRecording ? (
             <button
