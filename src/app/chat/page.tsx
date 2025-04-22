@@ -235,17 +235,6 @@ export default function ChatPage() {
             : "チャット相手を選択してください"}
         </header>
 
-        {/* TTSに関する注意書き */}
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-          <div className="flex items-start">
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                通信環境によっては音声読み上げが途中で止まることがあります。
-              </p>
-            </div>
-          </div>
-        </div>
-
         <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 space-y-4">
           {currentMessages.map((msg, idx) => (
             <div
