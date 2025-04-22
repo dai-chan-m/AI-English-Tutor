@@ -17,31 +17,79 @@ export default function CreateCharacterForm({ onClose, onSave }: Props) {
     icon: availableIcons[0].path,
     voice: "",
   });
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [error, setError] = useState("");
 
-  // 音声の選択肢をロード
+  // Google TTSの音声一覧 - 地域と性別に基づいたプリセット
+  const googleVoicesPresets = [
+    // 米国英語 - 女性
+    {
+      name: "en-US-Standard-F",
+      label: "アメリカ英語 (女性 - 若い)",
+      category: "US-女性",
+    },
+    {
+      name: "en-US-Standard-C",
+      label: "アメリカ英語 (女性 - 落ち着いた)",
+      category: "US-女性",
+    },
+
+    // 米国英語 - 男性
+    {
+      name: "en-US-Standard-A",
+      label: "アメリカ英語 (男性 - 若い)",
+      category: "US-男性",
+    },
+    {
+      name: "en-US-Standard-B",
+      label: "アメリカ英語 (男性 - 落ち着いた)",
+      category: "US-男性",
+    },
+
+    // 英国風アクセント (米国アクセントだがUKっぽい特徴を持つ声)
+    {
+      name: "en-GB-Standard-A",
+      label: "イギリス風アクセント (女性)",
+      category: "イギリス風",
+    },
+    {
+      name: "en-GB-Standard-B",
+      label: "イギリス風アクセント (男性)",
+      category: "イギリス風",
+    },
+
+    // オーストラリア風アクセント (米国アクセントだがAUっぽい特徴を持つ声)
+    {
+      name: "en-AU-Standard-C",
+      label: "オーストラリア風アクセント (女性)",
+      category: "オーストラリア風",
+    },
+    {
+      name: "en-AU-Standard-D",
+      label: "オーストラリア風アクセント (男性)",
+      category: "オーストラリア風",
+    },
+
+    // インド風アクセント (米国アクセントだがインド英語っぽい特徴を持つ声)
+    {
+      name: "en-IN-Standard-A",
+      label: "インド風アクセント (女性)",
+      category: "インド風",
+    },
+    {
+      name: "en-IN-Standard-B",
+      label: "インド風アクセント (男性)",
+      category: "インド風",
+    },
+  ];
+
+  const [googleVoices] = useState(googleVoicesPresets);
+
+  // デフォルト音声を設定
   useEffect(() => {
-    const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices();
-      if (availableVoices.length > 0) {
-        setVoices(availableVoices);
-        // デフォルトボイスを設定
-        setCharacter((prev) => ({
-          ...prev,
-          voice: availableVoices[0].name,
-        }));
-      }
-    };
-
-    loadVoices();
-
-    // ボイスが後からロードされる場合に対応
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null;
-    };
+    setCharacter((prev) => ({
+      ...prev,
+      voice: googleVoicesPresets[0].name, // 最初の音声をデフォルトに
+    }));
   }, []);
 
   const handleChange = (
@@ -94,7 +142,7 @@ export default function CreateCharacterForm({ onClose, onSave }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-700">
@@ -204,11 +252,51 @@ export default function CreateCharacterForm({ onClose, onSave }: Props) {
               required
             >
               <option value="">音声を選択してください</option>
-              {voices.map((voice) => (
-                <option key={voice.name} value={voice.name}>
-                  {voice.name} ({voice.lang})
-                </option>
-              ))}
+              <optgroup label="アメリカ英語 - 女性">
+                {googleVoices
+                  .filter((voice) => voice.category === "US-女性")
+                  .map((voice) => (
+                    <option key={voice.name} value={voice.name}>
+                      {voice.label}
+                    </option>
+                  ))}
+              </optgroup>
+              <optgroup label="アメリカ英語 - 男性">
+                {googleVoices
+                  .filter((voice) => voice.category === "US-男性")
+                  .map((voice) => (
+                    <option key={voice.name} value={voice.name}>
+                      {voice.label}
+                    </option>
+                  ))}
+              </optgroup>
+              <optgroup label="イギリス風アクセント">
+                {googleVoices
+                  .filter((voice) => voice.category === "イギリス風")
+                  .map((voice) => (
+                    <option key={voice.name} value={voice.name}>
+                      {voice.label}
+                    </option>
+                  ))}
+              </optgroup>
+              <optgroup label="オーストラリア風アクセント">
+                {googleVoices
+                  .filter((voice) => voice.category === "オーストラリア風")
+                  .map((voice) => (
+                    <option key={voice.name} value={voice.name}>
+                      {voice.label}
+                    </option>
+                  ))}
+              </optgroup>
+              <optgroup label="インド風アクセント">
+                {googleVoices
+                  .filter((voice) => voice.category === "インド風")
+                  .map((voice) => (
+                    <option key={voice.name} value={voice.name}>
+                      {voice.label}
+                    </option>
+                  ))}
+              </optgroup>
             </select>
           </div>
 

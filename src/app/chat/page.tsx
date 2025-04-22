@@ -13,7 +13,7 @@ import { FiSend, FiVolume2, FiHome, FiX, FiMenu } from "react-icons/fi";
 import ServiceLogo from "@/components/ServiceLogo";
 import Link from "next/link";
 import { CHAT_MODE } from "@/constants/app";
-import { removeEmojis, speakMessage, loadVoices } from "@/utils/speechUtils";
+import { removeEmojis, speakWithTTS } from "@/utils/speechUtils";
 import { sendChatMessage } from "@/utils/chatUtils";
 import { Character, ChatMessage, CustomCharacter } from "@/types/chat";
 import { getAllCharacters, deleteCustomCharacter } from "@/utils/characterData";
@@ -28,9 +28,6 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(true);
-  const [availableVoices, setAvailableVoices] = useState<
-    SpeechSynthesisVoice[]
-  >([]);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -44,18 +41,6 @@ export default function ChatPage() {
     if (chars.length > 0 && !selectedChar) {
       setSelectedChar(chars[0]);
     }
-
-    // 音声の初期化
-    setAvailableVoices(loadVoices());
-
-    // ボイスリストが後から読み込まれた場合の対応
-    window.speechSynthesis.onvoiceschanged = () => {
-      setAvailableVoices(loadVoices());
-    };
-
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null;
-    };
   }, []);
 
   const handleTranscriptUpdate = (text: string) => {
@@ -74,11 +59,10 @@ export default function ChatPage() {
   const handleSpeakMessage = (text: string, index: number) => {
     if (!selectedChar) return;
 
-    speakMessage(
+    speakWithTTS(
       removeEmojis(text),
       index,
       selectedChar.voice,
-      availableVoices,
       setSpeakingIndex
     );
   };
@@ -251,19 +235,16 @@ export default function ChatPage() {
             : "チャット相手を選択してください"}
         </header>
 
-        {/* Google音声に関する注意書き */}
-        {selectedChar && selectedChar.voice.includes("Google") && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-            <div className="flex items-start">
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  <strong>注意:</strong>{" "}
-                  通信環境によっては音声読み上げが途中で止まることがあります。
-                </p>
-              </div>
+        {/* TTSに関する注意書き */}
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+          <div className="flex items-start">
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                通信環境によっては音声読み上げが途中で止まることがあります。
+              </p>
             </div>
           </div>
-        )}
+        </div>
 
         <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 space-y-4">
           {currentMessages.map((msg, idx) => (
