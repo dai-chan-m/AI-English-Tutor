@@ -8,9 +8,14 @@ export type Character = {
   prompt: string;
   icon: string;
   voice: string;
+  isCustom?: boolean;
 };
 
 export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+};
+
+export type CustomCharacter = Omit<Character, "id"> & {
+  id?: string;
 };

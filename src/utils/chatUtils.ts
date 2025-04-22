@@ -4,12 +4,14 @@ import { ChatMessage } from "@/types/chat";
  * チャットメッセージ送信処理
  */
 export const sendChatMessage = async (
-  messages: ChatMessage[], 
+  name: string,
+  messages: ChatMessage[],
   systemPrompt: string
 ): Promise<string> => {
   const res = await fetch("/api/ai-chat", {
     method: "POST",
     body: JSON.stringify({
+      name,
       messages,
       systemPrompt,
     }),

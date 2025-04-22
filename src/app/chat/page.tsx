@@ -2,18 +2,26 @@
 
 import { useState, useEffect } from "react";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
-import { FaMicrophone, FaStop, FaSpinner } from "react-icons/fa";
+import {
+  FaMicrophone,
+  FaStop,
+  FaSpinner,
+  FaPlus,
+  FaTrashAlt,
+} from "react-icons/fa";
 import { FiSend, FiVolume2, FiHome, FiX, FiMenu } from "react-icons/fi";
 import ServiceLogo from "@/components/ServiceLogo";
 import Link from "next/link";
 import { CHAT_MODE } from "@/constants/app";
 import { removeEmojis, speakMessage, loadVoices } from "@/utils/speechUtils";
 import { sendChatMessage } from "@/utils/chatUtils";
-import { Character, ChatMessage } from "@/types/chat";
-import { characters } from "@/utils/characterData";
+import { Character, ChatMessage, CustomCharacter } from "@/types/chat";
+import { getAllCharacters, deleteCustomCharacter } from "@/utils/characterData";
+import CreateCharacterForm from "@/components/CreateCharacterForm";
 
 export default function ChatPage() {
-  const [selectedChar, setSelectedChar] = useState<Character>(characters[0]);
+  const [allCharacters, setAllCharacters] = useState<Character[]>([]);
+  const [selectedChar, setSelectedChar] = useState<Character | null>(null);
   const [messagesMap, setMessagesMap] = useState<Record<string, ChatMessage[]>>(
     {}
   );
@@ -24,9 +32,20 @@ export default function ChatPage() {
     SpeechSynthesisVoice[]
   >([]);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
+  // 初期化処理
   useEffect(() => {
-    // 初回ロード時
+    // キャラクター一覧を取得
+    const chars = getAllCharacters();
+    setAllCharacters(chars);
+
+    // デフォルトのキャラクターを選択
+    if (chars.length > 0 && !selectedChar) {
+      setSelectedChar(chars[0]);
+    }
+
+    // 音声の初期化
     setAvailableVoices(loadVoices());
 
     // ボイスリストが後から読み込まれた場合の対応
@@ -47,10 +66,14 @@ export default function ChatPage() {
     handleTranscriptUpdate
   );
 
-  const currentMessages = messagesMap[selectedChar.id] || [];
+  const currentMessages = selectedChar
+    ? messagesMap[selectedChar.id] || []
+    : [];
 
   // メッセージ読み上げ処理
   const handleSpeakMessage = (text: string, index: number) => {
+    if (!selectedChar) return;
+
     speakMessage(
       removeEmojis(text),
       index,
@@ -61,7 +84,7 @@ export default function ChatPage() {
   };
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !selectedChar) return;
 
     const newMessages: ChatMessage[] = [
       ...currentMessages,
@@ -72,8 +95,11 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const reply = await sendChatMessage(newMessages, selectedChar.prompt);
-      
+      const reply = await sendChatMessage(
+        selectedChar.name,
+        newMessages,
+        selectedChar.prompt
+      );
       setMessagesMap({
         ...messagesMap,
         [selectedChar.id]: [
@@ -87,6 +113,73 @@ export default function ChatPage() {
       setLoading(false);
     }
   };
+
+  // カスタムキャラクターの保存処理
+  const handleSaveCharacter = (character: CustomCharacter) => {
+    // キャラクター一覧を再取得
+    const updatedChars = getAllCharacters();
+    setAllCharacters(updatedChars);
+
+    // 新しく作成したキャラクターを選択
+    const newChar = updatedChars.find((char) => char.id === character.id);
+    if (newChar) {
+      setSelectedChar(newChar);
+    }
+  };
+
+  // キャラクターの削除処理
+  const handleDeleteCharacter = (id: string) => {
+    if (window.confirm("このチャット相手を削除してもよろしいですか？")) {
+      deleteCustomCharacter(id);
+
+      // 削除後のキャラクター一覧を再取得
+      const updatedChars = getAllCharacters();
+      setAllCharacters(updatedChars);
+
+      // 削除されたキャラクターが選択中だった場合は、最初のキャラクターを選択
+      if (selectedChar?.id === id && updatedChars.length > 0) {
+        setSelectedChar(updatedChars[0]);
+      }
+    }
+  };
+
+  // キャラクター選択のレンダリング
+  const renderCharacterButton = (char: Character) => (
+    <div
+      key={char.id}
+      className={`w-full flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-gray-100 cursor-pointer relative ${
+        selectedChar?.id === char.id
+          ? "bg-blue-100 border-blue-400 text-blue-700"
+          : "border-gray-300 text-gray-700"
+      }`}
+    >
+      <button
+        onClick={() => setSelectedChar(char)}
+        className="flex items-center gap-2 w-full"
+      >
+        <img
+          src={char.icon}
+          alt={char.name}
+          className="w-10 h-10 rounded-full"
+        />
+        <span className="text-sm font-semibold">{char.name}</span>
+      </button>
+
+      {/* カスタムキャラクターの場合は削除ボタンを表示 */}
+      {char.isCustom && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteCharacter(char.id);
+          }}
+          className="absolute right-2 text-red-500 hover:text-red-700"
+          title="削除"
+        >
+          <FaTrashAlt size={14} />
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
@@ -119,27 +212,16 @@ export default function ChatPage() {
           </Link>
         </div>
         <div className="p-4 space-y-4">
-          {characters.map((char) => (
-            <button
-              key={char.id}
-              onClick={() => {
-                setSelectedChar(char);
-                setMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-gray-100 cursor-pointer ${
-                selectedChar.id === char.id
-                  ? "bg-blue-100 border-blue-400 text-blue-700"
-                  : "border-gray-300 text-gray-700"
-              }`}
-            >
-              <img
-                src={char.icon}
-                alt={char.name}
-                className="w-10 h-10 rounded-full"
-              />
-              <span className="text-sm font-semibold">{char.name}</span>
-            </button>
-          ))}
+          {allCharacters.map(renderCharacterButton)}
+
+          {/* 新規作成ボタン */}
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-green-500 text-green-600 hover:bg-green-50"
+          >
+            <FaPlus />
+            <span>新しいチャット相手を作成</span>
+          </button>
         </div>
       </div>
 
@@ -147,31 +229,41 @@ export default function ChatPage() {
       <aside className="hidden md:block w-128 bg-white border-r border-gray-200 p-4 space-y-4">
         <ServiceLogo />
         <h2 className="text-lg font-bold mt-20 text-gray-700">{CHAT_MODE}</h2>
-        {characters.map((char) => (
+        <div className="space-y-2">
+          {allCharacters.map(renderCharacterButton)}
+
+          {/* 新規作成ボタン */}
           <button
-            key={char.id}
-            onClick={() => setSelectedChar(char)}
-            className={`w-full flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-gray-100 cursor-pointer ${
-              selectedChar.id === char.id
-                ? "bg-blue-100 border-blue-400 text-blue-700"
-                : "border-gray-300 text-gray-700"
-            }`}
+            onClick={() => setShowCreateForm(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-green-500 text-green-600 hover:bg-green-50"
           >
-            <img
-              src={char.icon}
-              alt={char.name}
-              className="w-10 h-10 rounded-full"
-            />
-            <span className="text-sm font-semibold">{char.name}</span>
+            <FaPlus />
+            <span>新しいチャット相手を作成</span>
           </button>
-        ))}
+        </div>
       </aside>
 
       {/* チャットエリア */}
       <main className="flex-1 flex flex-col w-full bg-white shadow-lg">
         <header className="bg-green-600 text-white text-base md:text-lg font-bold px-4 md:px-6 py-3">
-          {selectedChar.name} と英語チャット中...
+          {selectedChar
+            ? `${selectedChar.name} と英語チャット中...`
+            : "チャット相手を選択してください"}
         </header>
+
+        {/* Google音声に関する注意書き */}
+        {selectedChar && selectedChar.voice.includes("Google") && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+            <div className="flex items-start">
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  <strong>注意:</strong>{" "}
+                  通信環境によっては音声読み上げが途中で止まることがあります。
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 space-y-4">
           {currentMessages.map((msg, idx) => (
@@ -181,7 +273,7 @@ export default function ChatPage() {
                 msg.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              {msg.role !== "user" && (
+              {msg.role !== "user" && selectedChar && (
                 <img
                   src={selectedChar.icon}
                   alt={selectedChar.name}
@@ -204,7 +296,7 @@ export default function ChatPage() {
                     className="ml-2 text-xl text-gray-700 hover:text-green-600 cursor-pointer"
                     title="読み上げる"
                   >
-                    {speakingIndex == idx ? (
+                    {speakingIndex === idx ? (
                       <FaSpinner className="h-5 w-5 animate-spin" />
                     ) : (
                       <FiVolume2 className="h-5 w-5" />
@@ -215,7 +307,7 @@ export default function ChatPage() {
             </div>
           ))}
           {loading && (
-            <div className="mr-auto bg-gray-200 px-4 py-2 rounded-lg animate-pulse">
+            <div className="mr-auto bg-gray-200 px-4 py-2 rounded-lg animate-pulse text-gray-700">
               Thinking...
             </div>
           )}
@@ -234,12 +326,14 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="英語で話しかけてみよう！"
+            disabled={!selectedChar}
           />
           {!isRecording ? (
             <button
               type="button"
               onClick={handleStart}
-              className="mr-2 p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+              disabled={!selectedChar}
+              className="mr-2 p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               title="音声入力"
             >
               <FaMicrophone />
@@ -256,13 +350,21 @@ export default function ChatPage() {
           )}
           <button
             type="submit"
-            disabled={loading}
-            className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 text-sm cursor-pointer"
+            disabled={loading || !selectedChar}
+            className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FiSend />
           </button>
         </form>
       </main>
+
+      {/* キャラクター作成フォーム */}
+      {showCreateForm && (
+        <CreateCharacterForm
+          onClose={() => setShowCreateForm(false)}
+          onSave={handleSaveCharacter}
+        />
+      )}
     </div>
   );
 }
