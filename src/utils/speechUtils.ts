@@ -6,80 +6,81 @@
  * テキストから絵文字を削除する
  */
 export const removeEmojis = (text: string): string => {
-  return text.replace(
-    /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uFE0F|\u200D)/g,
-    ""
-  );
+  return text.replace(/\p{Extended_Pictographic}/gu, "");
 };
 
 /**
- * テキストを音声で読み上げる
+ * Google TTSを使ってテキストを音声で読み上げる
  */
-export const speakMessage = (
+export const speakWithTTS = async (
   text: string,
   index: number,
-  selectedVoice: string,
-  availableVoices: SpeechSynthesisVoice[],
+  voiceName: string,
   setSpeakingIndex: (index: number | null) => void
-): void => {
-  const cleanedText = removeEmojis(text);
+): Promise<void> => {
+  try {
+    // インデックスを設定して発話中であることを通知
+    setSpeakingIndex(index);
 
-  // ピリオド、疑問符、感嘆符で分割
-  const sentences = cleanedText.match(/[^.!?]+[.!?]?/g) || [cleanedText];
+    // テキストをクリーニング
+    const cleanedText = removeEmojis(text);
 
-  // 発話中の場合はキャンセル
-  window.speechSynthesis.cancel();
-  setSpeakingIndex(index);
-
-  let current = 0;
-
-  const speakNext = () => {
-    if (current >= sentences.length) {
+    if (!cleanedText.trim()) {
       setSpeakingIndex(null);
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(sentences[current].trim());
+    // APIリクエスト - テキスト全体を一度に処理
+    const response = await fetch("/api/tts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: cleanedText.trim(),
+        voiceName: voiceName,
+        // UK系の音声の場合は言語コードをen-GBに
+        languageCode: voiceName.includes("GB") ? "en-GB" : "en-US",
+      }),
+    });
 
-    // ボイスを設定する
-    if (availableVoices.length > 0) {
-      const matchedVoice = availableVoices.find(
-        (voice) => voice.name === selectedVoice
-      );
-
-      if (matchedVoice) {
-        utterance.voice = matchedVoice;
-      } else {
-        const langVoice = availableVoices.find((voice) =>
-          voice.lang.startsWith(utterance.lang)
-        );
-        if (langVoice) {
-          utterance.voice = langVoice;
-        }
-      }
+    if (!response.ok) {
+      throw new Error("TTS API request failed");
     }
 
-    // 話し終わったらインデックスをクリア
-    utterance.onend = () => {
-      current++;
-      speakNext();
+    const data = await response.json();
+
+    // Base64エンコードされた音声データからBlobを作成
+    const audioContent = data.audioContent;
+    const audioBlob = new Blob(
+      [Uint8Array.from(atob(audioContent), (c) => c.charCodeAt(0))],
+      { type: "audio/mp3" }
+    );
+
+    // Blobから音声を再生
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+
+    // 音声再生後の処理
+    audio.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+      setSpeakingIndex(null);
     };
 
-    // エラー時も進める
-    utterance.onerror = () => {
-      current++;
-      speakNext();
+    // エラー処理
+    audio.onerror = () => {
+      console.error("再生エラー");
+      URL.revokeObjectURL(audioUrl);
+      setSpeakingIndex(null);
     };
 
-    window.speechSynthesis.speak(utterance);
-  };
-
-  speakNext();
-};
-
-/**
- * 使用可能な音声リストを取得する
- */
-export const loadVoices = (): SpeechSynthesisVoice[] => {
-  return window.speechSynthesis.getVoices();
+    // 再生開始
+    audio.play().catch((err) => {
+      console.error("再生開始エラー:", err);
+      setSpeakingIndex(null);
+    });
+  } catch (error) {
+    console.error("Google TTS発話エラー:", error);
+    setSpeakingIndex(null);
+  }
 };
