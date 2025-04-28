@@ -57,6 +57,28 @@ export default function Home() {
           </ul>
         </div>
 
+        {/* Writing モード */}
+        <div
+          className="bg-white border border-green-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
+          onClick={() => router.push("/writing")}
+        >
+          <h2 className="text-2xl font-semibold text-green-600 mb-4">
+            {WRITING_MODE}
+          </h2>
+          <p className="text-gray-500 text-sm mb-3">英作文力アップに効果的</p>
+          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
+            <li>
+              ✅ <span className="font-medium">英作文添削</span>
+              をAIが日本語で丁寧に解説
+            </li>
+            <li>
+              ✅ <span className="font-medium">英語ライティング</span>
+              の弱点を分析
+            </li>
+            <li>✅ 手書き英作文の写真📷や音声入力🎤にも対応</li>
+          </ul>
+        </div>
+
         {/* Vocab モード */}
         <div
           className="bg-white border border-blue-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
@@ -84,52 +106,6 @@ export default function Home() {
           </ul>
         </div>
 
-        {/* Writing モード */}
-        <div
-          className="bg-white border border-green-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
-          onClick={() => router.push("/writing")}
-        >
-          <h2 className="text-2xl font-semibold text-green-600 mb-4">
-            {WRITING_MODE}
-          </h2>
-          <p className="text-gray-500 text-sm mb-3">英作文力アップに効果的</p>
-          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
-            <li>
-              ✅ <span className="font-medium">英作文添削</span>
-              をAIが日本語で丁寧に解説
-            </li>
-            <li>
-              ✅ <span className="font-medium">英語ライティング</span>
-              の弱点を分析
-            </li>
-            <li>✅ 手書き英作文の写真📷や音声入力🎤にも対応</li>
-          </ul>
-        </div>
-
-        {/* 日替わり英単語ドリル */}
-        <div
-          className="bg-white border border-blue-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
-          onClick={() => router.push("/daily")}
-        >
-          <h2 className="text-2xl font-semibold text-blue-600 mb-4">
-            📅 日替わり英単語ドリル
-          </h2>
-          <p className="text-gray-500 text-sm mb-3">
-            毎日続ける英語学習習慣づくり
-          </p>
-          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
-            <li>
-              ✅ 毎日更新の<span className="font-medium">英単語問題</span>
-              で学習継続
-            </li>
-            <li>
-              ✅ <span className="font-medium">英検・TOEIC</span>
-              頻出単語を効率的に学習
-            </li>
-            <li>✅ 過去問アーカイブで復習も簡単</li>
-          </ul>
-        </div>
-
         {/* 日替わり英作文 */}
         <div
           className="bg-white border border-green-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
@@ -154,6 +130,30 @@ export default function Home() {
               ✅ <span className="font-medium">模範解答</span>
               を参考に表現力を磨く
             </li>
+          </ul>
+        </div>
+
+        {/* 日替わり英単語ドリル */}
+        <div
+          className="bg-white border border-blue-200 shadow-lg rounded-xl p-6 text-center hover:shadow-xl transition cursor-pointer"
+          onClick={() => router.push("/daily")}
+        >
+          <h2 className="text-2xl font-semibold text-blue-600 mb-4">
+            📅 日替わり英単語ドリル
+          </h2>
+          <p className="text-gray-500 text-sm mb-3">
+            毎日続ける英語学習習慣づくり
+          </p>
+          <ul className="list-inside list-none space-y-2 text-sm text-gray-700 text-left">
+            <li>
+              ✅ 毎日更新の<span className="font-medium">英単語問題</span>
+              で学習継続
+            </li>
+            <li>
+              ✅ <span className="font-medium">英検・TOEIC</span>
+              頻出単語を効率的に学習
+            </li>
+            <li>✅ 過去問アーカイブで復習も簡単</li>
           </ul>
         </div>
       </div>
