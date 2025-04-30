@@ -1,12 +1,8 @@
-"use client";
-
 import { APP_NAME } from "@/constants/app";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import FooterLinks from "./FooterLinks";
 
 export default function Footer() {
-  const pathname = usePathname();
-
   const links = [
     { href: "/faq", label: "よくある質問" },
     { href: "/privacy", label: "プライバシーポリシー" },
@@ -17,25 +13,7 @@ export default function Footer() {
     <footer className="mt-16 print:hidden">
       {/* 通常のフッターリンク */}
       <div className="text-gray-400 text-sm text-center space-y-4">
-        <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-gray-500">
-          {links.map(({ href, label }, idx) => (
-            <span key={href} className="flex items-center">
-              {pathname === href ? (
-                <span className="text-gray-700 cursor-default">{label}</span>
-              ) : (
-                <Link
-                  href={href}
-                  className="hover:underline hover:text-blue-600 transition"
-                >
-                  {label}
-                </Link>
-              )}
-              {idx < links.length - 1 && (
-                <span className="hidden md:inline mx-2">|</span>
-              )}
-            </span>
-          ))}
-        </div>
+        <FooterLinks links={links} />
 
         {/* サイトマップ的な役割のリンク */}
         <div className="text-xs flex flex-wrap justify-center gap-x-4 gap-y-2 max-w-2xl mx-auto px-4">
