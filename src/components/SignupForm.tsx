@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthForm from "@/components/AuthForm";
 
-export default function SignupForm() {
+export default function Form() {
   const router = useRouter();
 
   const handleSuccess = () => {
@@ -21,11 +21,7 @@ export default function SignupForm() {
         無料で始めて、英語学習を加速させよう！
       </p>
 
-      <AuthForm
-        type="signup"
-        buttonText="登録する"
-        onSuccess={handleSuccess}
-      />
+      <AuthForm type="signup" buttonText="登録する" onSuccess={handleSuccess} />
 
       <div className="text-center pt-2 text-sm text-gray-600">
         すでにアカウントをお持ちの方は{" "}
