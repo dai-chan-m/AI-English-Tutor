@@ -11,7 +11,7 @@ export default async function DailyPage({
     page_number: string;
   };
 }) {
-  const { page_number } = await params;
+  const { page_number } = params;
   const pageNumber = parseInt(page_number, 10);
 
   const { data, error } = await getServerData<DailyQuestion[]>(
