@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getLevelDisplay } from "@/constants/levels";
+import { DailyQuestion } from "@/types/dailyQuestion";
 
 export default function DailyQuestionsRenderer({
   data,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import QuestionViewer from "@/components/QuestionViewer";
 import { VOCAB_MODE } from "@/constants/app";
 import { getLevelDisplay } from "@/constants/levels";
+import { DailyQuestion } from "@/types/dailyQuestion";
 
 export default function DailyPageViewer({
   data,

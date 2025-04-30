@@ -1,10 +1,10 @@
-type DailyQuestion = {
+export type DailyQuestion = {
   page_number: number;
   level: string;
   questions: QuestionType[];
 };
 
-type QuestionType = {
+export type QuestionType = {
   questionCount: string;
   question: string;
   choices: string[];

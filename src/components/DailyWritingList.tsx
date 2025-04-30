@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getLevelDisplay } from "@/constants/levels";
+import { WritingPrompt } from "@/types/writingPrompt";
 
 export default function DailyWritingList({
   data,

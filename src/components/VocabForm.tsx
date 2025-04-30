@@ -5,6 +5,7 @@ import QuestionViewer from "@/components/QuestionViewer";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import Link from "next/link";
 import Spinner from "@/components/Spinner";
+import { QuestionType } from "@/types/dailyQuestion";
 
 export default function VocabForm() {
   const { checkingAuth, isAuthenticated } = useAuthGuard(false); // リダイレクトなし

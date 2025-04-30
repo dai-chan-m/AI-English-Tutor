@@ -2,6 +2,7 @@ import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
 import DailyWritingList from "@/components/DailyWritingList";
 import { getServerData } from "@/utils/getServerData";
+import { WritingPrompt } from "@/types/writingPrompt";
 
 export default async function DailyWritingPage() {
   // サーバーサイドでデータを取得

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getLevelDisplay } from "@/constants/levels";
 import { fetchData } from "@/utils/supabaseHelpers";
+import { DailyQuestion } from "@/types/dailyQuestion";
 
 export default async function DailyQuestionsList() {
   const result = await fetchData<DailyQuestion[]>("daily_questions", {

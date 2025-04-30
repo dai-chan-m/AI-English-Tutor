@@ -2,6 +2,7 @@ import Footer from "@/components/Footer";
 import ServiceLogo from "@/components/ServiceLogo";
 import DailyQuestionsRenderer from "@/components/DailyQuestionsRenderer";
 import { getServerData } from "@/utils/getServerData";
+import { DailyQuestion } from "@/types/dailyQuestion";
 
 export default async function DailyListPage() {
   const { data, error } = await getServerData<DailyQuestion[]>(

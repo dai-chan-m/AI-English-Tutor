@@ -1,4 +1,4 @@
-type WritingPrompt = {
+export type WritingPrompt = {
   id: number;
   level: string;
   topic: string;
