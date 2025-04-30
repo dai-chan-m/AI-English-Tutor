@@ -7,11 +7,11 @@ import { DailyQuestion } from "@/types/dailyQuestion";
 export default async function DailyPage({
   params,
 }: {
-  params: {
+  params: Promise<{
     page_number: string;
-  };
+  }>;
 }) {
-  const { page_number } = params;
+  const { page_number } = await params;
   const pageNumber = parseInt(page_number, 10);
 
   const { data, error } = await getServerData<DailyQuestion[]>(
