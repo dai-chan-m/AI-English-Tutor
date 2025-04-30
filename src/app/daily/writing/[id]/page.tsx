@@ -12,15 +12,7 @@ import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import { getLevelDisplay } from "@/constants/levels";
 import { fetchData } from "@/utils/supabaseHelpers";
 import { FaMicrophone, FaStop } from "react-icons/fa";
-
-type WritingPrompt = {
-  id: number;
-  level: string;
-  topic: string;
-  model_answer: string;
-  japanese_explanation: string;
-  created_at: string;
-};
+import { WritingPrompt } from "@/types/writingPrompt";
 
 export default function DailyWritingDetailPage() {
   const { checkingAuth, isAuthenticated } = useAuthGuard(false);

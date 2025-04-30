@@ -1,15 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-export type QuestionType = {
-  questionCount: string;
-  question: string;
-  choices: string[];
-  answer: string;
-  explanation_ja: string;
-  Japanese: string;
-} | null;
+import { QuestionType } from "@/types/dailyQuestion";
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
