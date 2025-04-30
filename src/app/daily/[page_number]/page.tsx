@@ -25,11 +25,7 @@ export default async function DailyPage({
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 px-4 py-10 print:bg-white print:shadow-none print:border-none print:rounded-none">
       <ServiceLogo />
-      <DailyPageViewer
-        data={data}
-        error={error}
-        pageNumber={isNaN(pageNumber) ? 0 : pageNumber}
-      />
+      <DailyPageViewer data={data} error={error} pageNumber={pageNumber} />
       <Footer />
     </div>
   );
