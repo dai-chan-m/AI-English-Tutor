@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import {
   FaMicrophone,
@@ -8,8 +8,16 @@ import {
   FaSpinner,
   FaPlus,
   FaTrashAlt,
+  FaPhone,
 } from "react-icons/fa";
-import { FiSend, FiVolume2, FiHome, FiX, FiMenu } from "react-icons/fi";
+import {
+  FiSend,
+  FiVolume2,
+  FiHome,
+  FiX,
+  FiMenu,
+  FiPhoneCall,
+} from "react-icons/fi";
 import ServiceLogo from "@/components/ServiceLogo";
 import Link from "next/link";
 import { CHAT_MODE } from "@/constants/app";
@@ -30,6 +38,9 @@ export default function ChatInterface() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isVideoChat, setIsVideoChat] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audio2Ref = useRef<HTMLAudioElement | null>(null);
 
   // 初期化処理
   useEffect(() => {
@@ -42,6 +53,13 @@ export default function ChatInterface() {
       setSelectedChar(chars[0]);
     }
   }, []);
+
+  useEffect(() => {
+    if (isVideoChat && input) {
+      handleStop();
+      handleSend();
+    }
+  }, [input]);
 
   const handleTranscriptUpdate = (text: string) => {
     setInput((prev) => `${prev} ${text}`.trim());
@@ -57,6 +75,8 @@ export default function ChatInterface() {
 
   // メッセージ読み上げ処理
   const handleSpeakMessage = (text: string, index: number) => {
+    handleStop();
+
     if (!selectedChar) return;
 
     speakWithTTS(
@@ -91,12 +111,19 @@ export default function ChatInterface() {
           { role: "assistant", content: reply },
         ],
       });
+      handleSpeakMessage(reply, newMessages.length);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (speakingIndex == null && isVideoChat && currentMessages.length > 0) {
+      handleStart();
+    }
+  }, [speakingIndex, isVideoChat, currentMessages]);
 
   // カスタムキャラクターの保存処理
   const handleSaveCharacter = (character: CustomCharacter) => {
@@ -165,6 +192,32 @@ export default function ChatInterface() {
     </div>
   );
 
+  const playBeep = () => {
+    const audio = new Audio("/sounds/beep.mp3");
+    const audio2 = new Audio("/sounds/gacha.mp3");
+
+    audioRef.current = audio;
+    audio2Ref.current = audio2;
+
+    audio
+      .play()
+      .then(() => {
+        audio.addEventListener("ended", () => {
+          audio2
+            .play()
+            .then(() => {
+              setInput("hi");
+            })
+            .catch((error) => {
+              console.error("Second audio playback failed:", error);
+            });
+        });
+      })
+      .catch((error) => {
+        console.error("First audio playback failed:", error);
+      });
+  };
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
       {/* モバイル用ハンバーガー */}
@@ -229,10 +282,23 @@ export default function ChatInterface() {
 
       {/* チャットエリア */}
       <main className="flex-1 flex flex-col w-full bg-white shadow-lg">
-        <header className="bg-green-600 text-white text-base md:text-lg font-bold px-4 md:px-6 py-3">
-          {selectedChar
-            ? `${selectedChar.name} と英語チャット中...`
-            : "チャット相手を選択してください"}
+        <header className="flex items-center justify-between bg-green-600 text-white text-base md:text-lg font-bold px-4 md:px-6 py-3">
+          <span>
+            {selectedChar
+              ? selectedChar.name
+              : "チャット相手を選択してください"}
+          </span>
+
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!selectedChar}
+            onClick={() => {
+              playBeep();
+              setIsVideoChat(!isVideoChat);
+            }}
+          >
+            <FiPhoneCall />
+          </button>
         </header>
 
         <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 space-y-4">
@@ -327,6 +393,49 @@ export default function ChatInterface() {
             <FiSend />
           </button>
         </form>
+
+        {/* ビデオチャットモーダル */}
+        {isVideoChat && selectedChar && (
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex flex-col justify-center items-center">
+            {/* 相手のアイコンと名前 */}
+            <div className="flex flex-col items-center mb-8">
+              <img
+                src={selectedChar.icon}
+                alt={selectedChar.name}
+                className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white shadow-lg"
+              />
+              <h2 className="mt-4 text-white text-2xl md:text-3xl font-bold">
+                {selectedChar.name}
+              </h2>
+              <p className="text-gray-300 text-sm md:text-base mt-2">
+                通話中...
+              </p>
+            </div>
+
+            {/* コントロールボタン */}
+            <div className="flex gap-8">
+              {/* 通話終了ボタン */}
+              <button
+                onClick={() => {
+                  setIsVideoChat(false);
+                  handleStop();
+                  if (audioRef.current) {
+                    audioRef.current.pause();
+                    audioRef.current.currentTime = 0;
+                  }
+                  if (audio2Ref.current) {
+                    audio2Ref.current.pause();
+                    audio2Ref.current.currentTime = 0;
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-full cursor-pointer"
+                title="通話終了"
+              >
+                <FaPhone />
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* キャラクター作成フォーム */}
