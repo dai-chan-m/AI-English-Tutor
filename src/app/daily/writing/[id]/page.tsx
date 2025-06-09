@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Footer from "@/components/Footer";
-import ServiceLogo from "@/components/ServiceLogo";
-import Spinner from "@/components/Spinner";
+import Footer from "@/components/common/Footer";
+import ServiceLogo from "@/components/common/ServiceLogo";
+import Spinner from "@/components/common/Spinner";
 import { usePathname } from "next/navigation";
-import { OCRDropZone } from "@/components/OCRDropZone";
+import { OCRDropZone } from "@/components/writing/OCRDropZone";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import { getLevelDisplay } from "@/constants/levels";

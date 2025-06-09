@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import QuestionViewer from "@/components/QuestionViewer";
+import QuestionViewer from "@/components/common/QuestionViewer";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import Link from "next/link";
-import Spinner from "@/components/Spinner";
+import Spinner from "@/components/common/Spinner";
 import { QuestionType } from "@/types/dailyQuestion";
 
 export default function VocabForm() {

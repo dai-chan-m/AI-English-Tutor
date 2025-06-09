@@ -1,5 +1,5 @@
-import Footer from "@/components/Footer";
-import ServiceLogo from "@/components/ServiceLogo";
+import Footer from "@/components/common/Footer";
+import ServiceLogo from "@/components/common/ServiceLogo";
 import Link from "next/link";
 
 export default function PrivacyPolicyPage() {

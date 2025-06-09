@@ -1,6 +1,6 @@
-import Footer from "@/components/Footer";
-import ServiceLogo from "@/components/ServiceLogo";
-import SignupForm from "@/components/SignupForm";
+import Footer from "@/components/common/Footer";
+import ServiceLogo from "@/components/common/ServiceLogo";
+import SignupForm from "@/components/common/SignupForm";
 
 export default function SignUpPage() {
   return (

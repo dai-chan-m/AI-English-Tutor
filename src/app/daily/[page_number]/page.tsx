@@ -1,6 +1,6 @@
-import Footer from "@/components/Footer";
-import ServiceLogo from "@/components/ServiceLogo";
-import DailyPageViewer from "@/components/DailyPageViewer";
+import Footer from "@/components/common/Footer";
+import ServiceLogo from "@/components/common/ServiceLogo";
+import DailyPageViewer from "@/components/daily/DailyPageViewer";
 import { getServerData } from "@/utils/getServerData";
 import { DailyQuestion } from "@/types/dailyQuestion";
 

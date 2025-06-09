@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { OCRDropZone } from "@/components/OCRDropZone";
+import { OCRDropZone } from "@/components/writing/OCRDropZone";
 import { WRITING_MODE } from "@/constants/app";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import Link from "next/link";
-import Footer from "@/components/Footer";
-import ServiceLogo from "@/components/ServiceLogo";
-import Spinner from "@/components/Spinner";
+import Footer from "@/components/common/Footer";
+import ServiceLogo from "@/components/common/ServiceLogo";
+import Spinner from "@/components/common/Spinner";
 import { FaMicrophone, FaStop } from "react-icons/fa";
 import { levelMapping, getLevelDisplay } from "@/constants/levels";
 

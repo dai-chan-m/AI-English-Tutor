@@ -1,6 +1,6 @@
 import { APP_NAME, WRITING_MODE, VOCAB_MODE, CHAT_MODE } from "@/constants/app";
-import Footer from "@/components/Footer";
-import ServiceCard from "@/components/ServiceCard";
+import Footer from "@/components/common/Footer";
+import ServiceCard from "@/components/common/ServiceCard";
 
 export default function Home() {
   return (

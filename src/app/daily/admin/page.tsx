@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import Spinner from "@/components/Spinner";
+import Spinner from "@/components/common/Spinner";
 import { levelMapping } from "@/constants/levels";
 
 export default function DailyAdmin() {
