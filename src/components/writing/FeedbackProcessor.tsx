@@ -83,12 +83,21 @@ export const FeedbackProcessor = ({
     }
   };
 
+  // 渡す子コンポーネントの型を定義
+  type ChildProps = {
+    onSubmit: (e: React.FormEvent) => Promise<void>;
+    loading: boolean;
+  };
+
   // childrenに props を渡す
   return (
     <>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, { onSubmit: handleSubmit, loading } as any);
+          return React.cloneElement(child, { 
+            onSubmit: handleSubmit, 
+            loading 
+          } as Partial<ChildProps>);
         }
         return child;
       })}
