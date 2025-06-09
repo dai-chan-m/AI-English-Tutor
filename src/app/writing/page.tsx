@@ -1,105 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { OCRDropZone } from "@/components/writing/OCRDropZone";
 import { WRITING_MODE } from "@/constants/app";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 import Link from "next/link";
 import Footer from "@/components/common/Footer";
 import ServiceLogo from "@/components/common/ServiceLogo";
 import Spinner from "@/components/common/Spinner";
-import { FaMicrophone, FaStop } from "react-icons/fa";
-import { levelMapping, getLevelDisplay } from "@/constants/levels";
+import { levelMapping } from "@/constants/levels";
+import { WritingInputForm } from "@/components/writing/WritingInputForm";
+import { FeedbackTabs } from "@/components/writing/FeedbackTabs";
+import { PromptDisplay } from "@/components/writing/PromptDisplay";
+import { FeedbackProcessor } from "@/components/writing/FeedbackProcessor";
 
 export default function WritingPractice() {
   const { checkingAuth, isAuthenticated } = useAuthGuard(false);
   const [inputText, setInputText] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [loading, setLoading] = useState(false);
   const [promptLoading, setPromptLoading] = useState(false);
   const [tone, setTone] = useState("gentle");
-  const [tab, setTab] = useState<"summary" | "feedback" | "model">("feedback");
   const [level, setLevel] = useState("CEFR A2-B1");
   const [promptTopic, setPromptTopic] = useState("");
   const [promptJapanese, setPromptJapanese] = useState("");
   const [modelAnswer, setModelAnswer] = useState("");
   const [showPromptGenerator, setShowPromptGenerator] = useState(false);
-  const MAX_LENGTH = isAuthenticated ? 1000 : 300;
-  const remaining = MAX_LENGTH - inputText.length;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setFeedback("");
-
-    try {
-      const res = await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: inputText,
-          tone,
-          promptTopic: promptTopic || undefined,
-          promptLevel: level || undefined,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("API request failed");
-      }
-
-      if (res.headers.get("Content-Type")?.includes("text/event-stream")) {
-        const reader = res.body?.getReader();
-        if (!reader) throw new Error("Response body is empty");
-
-        // EventSourceの代わりにReadableStreamを手動で処理
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-
-          // Server-Sent Events形式でパース
-          const lines = buffer.split("\n\n");
-          buffer = lines.pop() || ""; // 最後の不完全な部分を保持
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              try {
-                const jsonStr = line.slice(6); // "data: "の後ろの部分
-                const parsedData = JSON.parse(jsonStr);
-                setFeedback(parsedData.feedback || "");
-              } catch (e) {
-                console.error("Failed to parse stream chunk", e);
-              }
-            }
-          }
-        }
-      } else {
-        const data = await res.json();
-        setFeedback(data.feedback || "");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      setFeedback("エラーが発生しました。もう一度試してください。");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const extractSummaryFromFeedback = (text: string) => {
-    const matches = [...text.matchAll(/🧑‍🏫 添削後の文: (.+)/g)];
-    return matches.map((m) => `💠 ${m[1]}`).join("\n");
-  };
-  const cleanOcrText = (text: string): string => {
-    return text
-      .replace(/\|/g, "I") // 「|」を大文字のIに補正
-      .replace(/[^a-zA-Z0-9.,!?'"()\s]/g, ""); // 不自然な記号を除去
-  };
 
   // 選択したレベルでランダムお題取得関数
   const generateWritingPrompt = async () => {
@@ -123,8 +47,6 @@ export default function WritingPractice() {
         setPromptTopic(data.topic);
         setPromptJapanese(data.japanese_explanation);
         setModelAnswer(data.model_answer);
-        // レベルは既に選択されているので上書きしない
-        setTab("feedback"); // 新しいお題が取得されたら初期タブに戻す
         // IDを表示
         console.log(`Retrieved writing prompt with ID: ${data.id}`);
       } else {
@@ -140,15 +62,6 @@ export default function WritingPractice() {
     }
   };
 
-  /* 音声認識関連 */
-  const handleTranscriptUpdate = (text: string) => {
-    setInputText((prev) => `${prev} ${text}`);
-  };
-
-  const { isRecording, handleStart, handleStop } = useSpeechRecognition(
-    handleTranscriptUpdate
-  );
-
   const togglePromptGenerator = () => {
     setShowPromptGenerator(!showPromptGenerator);
     // 初期表示時は自動生成しない（ユーザーがレベルを選択してから生成ボタンをクリックする）
@@ -158,10 +71,7 @@ export default function WritingPractice() {
     setPromptTopic("");
     setPromptJapanese("");
     setModelAnswer("");
-    setTab("feedback"); // タブをフィードバックに戻す
   };
-
-  // 模範解答は現在タブで表示されるため、このトグル関数は不要
 
   if (checkingAuth) return <Spinner />;
 
@@ -242,33 +152,17 @@ export default function WritingPractice() {
             </div>
 
             {promptTopic && (
-              <div className="mt-4 space-y-2">
-                <div className="bg-white p-3 rounded border border-yellow-200">
-                  <h4 className="font-semibold text-base text-yellow-800">
-                    お題:
-                  </h4>
-                  <p className="text-gray-800">{promptTopic}</p>
-                </div>
-
-                {promptJapanese && (
-                  <div className="bg-white p-3 rounded border border-yellow-200">
-                    <h4 className="font-semibold text-base text-yellow-800">
-                      お題の説明:
-                    </h4>
-                    <p className="text-gray-800">{promptJapanese}</p>
-                  </div>
-                )}
-
-                <p className="text-sm text-gray-600 italic">
-                  レベル: {getLevelDisplay(level)}
-                </p>
-              </div>
+              <PromptDisplay
+                topic={promptTopic}
+                japaneseExplanation={promptJapanese}
+                level={level}
+              />
             )}
           </div>
         )}
 
         {/* 口調選択 */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             フィードバックの口調
           </label>
@@ -283,151 +177,35 @@ export default function WritingPractice() {
             <option value="business">🧑‍💼 論理的なビジネス英語教師</option>
           </select>
 
-          {/* テキスト入力 */}
-          <textarea
-            value={inputText}
-            onChange={(e) => {
-              const cleaned = cleanOcrText(e.target.value);
-              if (cleaned.length <= MAX_LENGTH) {
-                setInputText(cleaned);
+          <FeedbackProcessor
+            text={inputText}
+            tone={tone}
+            promptTopic={promptTopic}
+            promptLevel={level}
+            onFeedbackReceived={setFeedback}
+          >
+            <WritingInputForm
+              inputText={inputText}
+              setInputText={setInputText}
+              isAuthenticated={isAuthenticated}
+              placeholder={
+                promptTopic
+                  ? `「${promptTopic}」についての英作文を書いてください`
+                  : undefined
               }
-            }}
-            rows={6}
-            placeholder={
-              promptTopic
-                ? `「${promptTopic}」についての英作文を書いてください（最大${MAX_LENGTH}文字）`
-                : `ここに英文を入力してください（最大${MAX_LENGTH}文字）`
-            }
-            className="w-full border border-gray-300 rounded-md p-4 text-gray-800 focus:border-transparent"
-          />
-          <div className="text-right text-sm text-gray-500 mb-1">
-            残り文字数: {remaining}
-          </div>
-          {!isAuthenticated && (
-            <div className="text-right text-sm text-gray-500 mt-1">
-              🔒
-              <Link
-                href="/login"
-                className="text-blue-600 hover:underline font-semibold"
-              >
-                ログイン
-              </Link>
-              すると最大
-              <span className="font-semibold">1000文字</span> まで入力できます。
-            </div>
-          )}
-
-          {/* ドロップゾーン（ログインしてるかで切り替え） */}
-          <OCRDropZone
-            setInputText={setInputText}
-            isAuthenticated={isAuthenticated}
-          />
-
-          {/* 音声入力 */}
-          <div className="flex justify-end gap-4 mt-4">
-            {!isRecording ? (
-              <button
-                type="button"
-                onClick={handleStart}
-                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
-              >
-                <FaMicrophone className="mr-2 text-base" />
-                <span>音声で入力する</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleStop}
-                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold shadow transition cursor-pointer flex items-center justify-center"
-              >
-                <FaStop className="mr-2 text-base" />
-                <span>音声入力を停止する</span>
-              </button>
-            )}
-          </div>
-
-          {/* 添削するボタン */}
-          <div className="flex flex-wrap gap-4 justify-center">
-            <button
-              type="submit"
-              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 disabled:opacity-50 cursor-pointer font-semibold transition"
-              disabled={loading || !inputText}
-            >
-              {loading ? "添削中..." : "添削する"}
-            </button>
-          </div>
-        </form>
+              loading={false}
+              onSubmit={() => {}}
+            />
+          </FeedbackProcessor>
+        </div>
 
         {/* フィードバック */}
-        {(feedback || (modelAnswer && promptTopic)) && (
-          <div className="flex space-x-4 mb-4 border-b">
-            <button
-              onClick={() => setTab("feedback")}
-              className={`px-4 py-2 font-medium ${
-                tab === "feedback"
-                  ? "border-b-2 border-green-600 text-green-700"
-                  : "text-gray-500"
-              }`}
-            >
-              📝 フィードバック
-            </button>
-            <button
-              onClick={() => setTab("summary")}
-              className={`px-4 py-2 font-medium ${
-                tab === "summary"
-                  ? "border-b-2 border-green-600 text-green-700"
-                  : "text-gray-500"
-              }`}
-            >
-              ✅ 添削後の文
-            </button>
-            {modelAnswer && promptTopic && (
-              <button
-                onClick={() => setTab("model")}
-                className={`px-4 py-2 font-medium ${
-                  tab === "model"
-                    ? "border-b-2 border-yellow-500 text-yellow-700"
-                    : "text-gray-500"
-                }`}
-              >
-                📚 模範解答
-              </button>
-            )}
-          </div>
-        )}
-        {tab == "feedback" && (loading || feedback) && (
-          <div className="mt-6 bg-gray-50 border border-gray-200 rounded-md p-4 whitespace-pre-wrap text-gray-800">
-            <h2 className="text-lg font-semibold mb-2 text-green-700">
-              フィードバック
-            </h2>
-            {loading && !feedback && (
-              <div className="flex justify-center items-center my-4">
-                <div className="w-6 h-6 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-            {feedback}
-          </div>
-        )}
-        {tab === "summary" && feedback && (
-          <div className="bg-gray-50 border rounded p-4 text-gray-800 whitespace-pre-wrap">
-            {extractSummaryFromFeedback(feedback)}
-          </div>
-        )}
-
-        {/* 模範解答表示 */}
-        {tab === "model" && modelAnswer && (
-          <div className="bg-yellow-50 border-yellow-200 border rounded p-4 text-gray-800 whitespace-pre-wrap">
-            <h2 className="text-lg font-semibold mb-2 text-yellow-700">
-              📚 模範解答
-            </h2>
-            <div className="whitespace-pre-wrap text-gray-800">
-              {modelAnswer}
-            </div>
-            <p className="mt-4 text-sm text-gray-600 italic">
-              レベル: {getLevelDisplay(level)}
-            </p>
-          </div>
-        )}
+        <FeedbackTabs
+          feedback={feedback}
+          modelAnswer={modelAnswer}
+          level={level}
+          showModel={!!promptTopic}
+        />
       </div>
 
       {/* 日替わり英作文への誘導 */}
