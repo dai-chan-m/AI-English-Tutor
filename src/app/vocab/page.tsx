@@ -1,7 +1,7 @@
 import { VOCAB_MODE } from "@/constants/app";
-import Footer from "@/components/Footer";
-import ServiceLogo from "@/components/ServiceLogo";
-import VocabForm from "@/components/VocabForm";
+import Footer from "@/components/common/Footer";
+import ServiceLogo from "@/components/common/ServiceLogo";
+import VocabForm from "@/components/vocab/VocabForm";
 
 export default function VocabPage() {
   return (

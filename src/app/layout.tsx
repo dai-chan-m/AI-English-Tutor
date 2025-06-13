@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import SupabaseProvider from "@/components/SupabaseProvider";
+import SupabaseProvider from "@/components/common/SupabaseProvider";
 import { APP_URL } from "@/constants/app";
 import Script from "next/script";
 

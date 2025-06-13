@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import AuthForm from "@/components/AuthForm";
+import AuthForm from "@/components/common/AuthForm";
 
 export default function LoginForm() {
   const router = useRouter();

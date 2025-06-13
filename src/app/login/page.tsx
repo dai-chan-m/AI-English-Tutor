@@ -1,6 +1,6 @@
-import Footer from "@/components/Footer";
-import ServiceLogo from "@/components/ServiceLogo";
-import LoginForm from "@/components/LoginForm";
+import Footer from "@/components/common/Footer";
+import ServiceLogo from "@/components/common/ServiceLogo";
+import LoginForm from "@/components/common/LoginForm";
 
 export default function LoginPage() {
   return (

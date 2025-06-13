@@ -23,12 +23,12 @@ export default function useChatMessages(selectedChar: Character | null) {
     index: number,
     stopRecording: () => void
   ) => {
+    // 音声認識を確実に停止
     stopRecording();
 
     if (!selectedChar) return;
 
-    stopRecording();
-
+    // AIが話し始める前に録音を停止することを確実に
     speakWithTTS(
       removeEmojis(text),
       index,

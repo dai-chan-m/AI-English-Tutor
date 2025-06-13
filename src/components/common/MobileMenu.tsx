@@ -3,7 +3,7 @@
 import { FiHome, FiX, FiMenu } from "react-icons/fi";
 import Link from "next/link";
 import { CHAT_MODE } from "@/constants/app";
-import CharacterList from "./CharacterList";
+import CharacterList from "@/components/chat/CharacterList";
 import { Character } from "@/types/chat";
 import { useState } from "react";
 

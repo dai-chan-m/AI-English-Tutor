@@ -19,7 +19,7 @@ export const speakWithTTS = async (
   setSpeakingIndex: (index: number | null) => void
 ): Promise<void> => {
   try {
-    // インデックスを設定して発話中であることを通知
+    // AIが話し始める前に発話中であることを確実に通知
     setSpeakingIndex(index);
 
     // テキストをクリーニング
@@ -61,14 +61,25 @@ export const speakWithTTS = async (
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
 
+    // 音声再生中は確実にspeakingIndexがnullでないことを保証
+    const checkInterval = setInterval(() => {
+      setSpeakingIndex(index);
+    }, 100);
+
     // 音声再生後の処理
     audio.onended = () => {
+      clearInterval(checkInterval);
       URL.revokeObjectURL(audioUrl);
-      setSpeakingIndex(null);
+      
+      // 少し遅延させて確実に音声が完全に終わった後にnullに設定
+      setTimeout(() => {
+        setSpeakingIndex(null);
+      }, 300);
     };
 
     // エラー処理
     audio.onerror = () => {
+      clearInterval(checkInterval);
       console.error("再生エラー");
       URL.revokeObjectURL(audioUrl);
       setSpeakingIndex(null);
@@ -76,6 +87,7 @@ export const speakWithTTS = async (
 
     // 再生開始
     audio.play().catch((err) => {
+      clearInterval(checkInterval);
       console.error("再生開始エラー:", err);
       setSpeakingIndex(null);
     });
