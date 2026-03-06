@@ -92,7 +92,27 @@ export const speakWithTTS = async (
       setSpeakingIndex(null);
     });
   } catch (error) {
-    console.error("Google TTS発話エラー:", error);
-    setSpeakingIndex(null);
+    console.error("Google TTS発話エラー、ブラウザTTSにフォールバック:", error);
+    // ブラウザのSpeechSynthesis APIにフォールバック
+    try {
+      const cleanedText = removeEmojis(text);
+      if (!cleanedText.trim()) {
+        setSpeakingIndex(null);
+        return;
+      }
+      const utterance = new SpeechSynthesisUtterance(cleanedText.trim());
+      utterance.lang = voiceName.includes("GB") ? "en-GB" : "en-US";
+      utterance.onend = () => {
+        setTimeout(() => setSpeakingIndex(null), 300);
+      };
+      utterance.onerror = () => {
+        console.error("ブラウザTTSも失敗しました");
+        setSpeakingIndex(null);
+      };
+      speechSynthesis.speak(utterance);
+    } catch (fallbackError) {
+      console.error("フォールバックTTSエラー:", fallbackError);
+      setSpeakingIndex(null);
+    }
   }
 };
