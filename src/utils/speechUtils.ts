@@ -10,6 +10,29 @@ export const removeEmojis = (text: string): string => {
 };
 
 /**
+ * ブラウザ音声名から女性声かどうかを判定する
+ */
+const isFemaleVoice = (name: string): boolean => {
+  return /samantha|victoria|karen|kate|fiona|moira|tessa|female|woman/i.test(name);
+};
+
+/**
+ * ブラウザの音声一覧を取得する（非同期読み込み対応）
+ */
+const getVoicesAsync = (): Promise<SpeechSynthesisVoice[]> => {
+  return new Promise((resolve) => {
+    const voices = speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      resolve(voices);
+      return;
+    }
+    speechSynthesis.onvoiceschanged = () => {
+      resolve(speechSynthesis.getVoices());
+    };
+  });
+};
+
+/**
  * Google TTSを使ってテキストを音声で読み上げる
  */
 export const speakWithTTS = async (
@@ -70,7 +93,7 @@ export const speakWithTTS = async (
     audio.onended = () => {
       clearInterval(checkInterval);
       URL.revokeObjectURL(audioUrl);
-      
+
       // 少し遅延させて確実に音声が完全に終わった後にnullに設定
       setTimeout(() => {
         setSpeakingIndex(null);
@@ -101,7 +124,45 @@ export const speakWithTTS = async (
         return;
       }
       const utterance = new SpeechSynthesisUtterance(cleanedText.trim());
-      utterance.lang = voiceName.includes("GB") ? "en-GB" : "en-US";
+      const voices = await getVoicesAsync();
+
+      // デバッグ: 利用可能な英語音声を表示
+      console.log("利用可能な英語音声:", voices.filter(v => v.lang.startsWith("en")).map(v => `${v.name} (${v.lang})`));
+
+      // Google TTS音声名からキャラクター特性を判定してブラウザ音声を選択
+      const isBritish = voiceName.includes("GB");
+      const isAlien = voiceName.includes("IN");
+      const isFemale = voiceName.endsWith("-F") || voiceName.includes("Neural2-F");
+
+      if (isAlien) {
+        // Zog: インド英語の声
+        utterance.lang = "en-IN";
+        const indianVoice = voices.find(
+          (v) => v.lang.startsWith("en-IN") || /rishi/i.test(v.name)
+        ) || voices.find((v) => v.lang.startsWith("en"));
+        if (indianVoice) utterance.voice = indianVoice;
+      } else if (isBritish) {
+        // William: イギリス英語の男性声
+        utterance.lang = "en-GB";
+        const britishVoice = voices.find(
+          (v) => v.lang.startsWith("en-GB") && !isFemaleVoice(v.name)
+        ) || voices.find((v) => v.lang.startsWith("en-GB"));
+        if (britishVoice) utterance.voice = britishVoice;
+      } else if (isFemale) {
+        // Jenny: スタンダードな女性声（Samanthaなど）
+        utterance.lang = "en-US";
+        const femaleVoice = voices.find(
+          (v) => v.lang.startsWith("en-US") && /samantha/i.test(v.name)
+        ) || voices.find(
+          (v) => v.lang.startsWith("en-US") && isFemaleVoice(v.name)
+        ) || voices.find((v) => v.lang.startsWith("en-US"));
+        if (femaleVoice) utterance.voice = femaleVoice;
+      } else {
+        utterance.lang = "en-US";
+        const defaultVoice = voices.find((v) => v.lang.startsWith("en-US"));
+        if (defaultVoice) utterance.voice = defaultVoice;
+      }
+
       utterance.onend = () => {
         setTimeout(() => setSpeakingIndex(null), 300);
       };

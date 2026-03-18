@@ -10,7 +10,7 @@ export const defaultCharacters: Character[] = [
     prompt:
       "あなたは女子高生です、名前はJenny。活発で、好奇心旺盛です、陸上部です、かわいい絵文字をたくさん使うのが大好きです！あなたのことが大好きで、常に甘い言葉を使ってきます、結構スラングを使います",
     icon: "/Jenny_icon.jpg",
-    voice: "en-US-Standard-F",
+    voice: "en-US-Neural2-F",
   },
   {
     id: "strict",
